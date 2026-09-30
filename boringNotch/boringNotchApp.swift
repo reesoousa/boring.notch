@@ -189,7 +189,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         SettingsWindowController.shared.setCamera(camera)
-        AgentSessionStore.shared.start()
+        // No app hospedeiro dos testes do Xcode, não mexe nos hooks nem no socket do app instalado.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            AgentSessionStore.shared.start()
+        }
 
         NotificationCenter.default.addObserver(
             self,

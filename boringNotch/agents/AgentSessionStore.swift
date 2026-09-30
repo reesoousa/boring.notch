@@ -56,7 +56,11 @@ final class AgentSessionStore: ObservableObject {
             installHooksIfNeeded()
             housekeeping?.invalidate()
             housekeeping = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-                Task { @MainActor in self?.pruneSessions() }
+                Task { @MainActor in
+                    // Se outra instância segurava o socket e fechou, assume a escuta.
+                    if self?.server.isRunning == false { self?.server.start() }
+                    self?.pruneSessions()
+                }
             }
         } else {
             housekeeping?.invalidate()
