@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Defaults
 import Foundation
 import UniformTypeIdentifiers
 
@@ -14,9 +15,9 @@ struct QuickShareProvider: Identifiable, Hashable, Sendable {
     static let airDropId = "AirDrop"
     static let systemShareMenuId = "System Share Menu"
     static let systemShareMenu = QuickShareProvider(id: systemShareMenuId, supportsRawText: true)
-    /// LocalSend (boringCode): manda para Android/Windows/Linux na mesma rede.
-    /// Não depende da extensão de compartilhamento (que vem desligada no macOS):
-    /// abre os arquivos direto no app, que já cai na aba Enviar com eles selecionados.
+    /// LocalSend (boringCode): manda para celulares e computadores na mesma rede.
+    /// Integrado (LocalSendService): o slot lista os aparelhos e envia sem abrir o app.
+    /// Com o integrado desligado, abre os arquivos no app, que já cai na aba Enviar.
     static let localSendId = "LocalSend"
     static let localSendBundleID = "org.localsend.localsendApp"
     /// supportsRawText: true para o texto chegar aqui e virar um .txt que não é apagado
@@ -210,7 +211,7 @@ final class QuickShareService: ObservableObject {
             providers.insert(ad, at: 0)
         }
 
-        if NSWorkspace.shared.urlForApplication(withBundleIdentifier: QuickShareProvider.localSendBundleID) != nil,
+        if Defaults[.localSendEnabled] || isLocalSendAppInstalled,
            !providers.contains(where: { $0.id == QuickShareProvider.localSendId }) {
             // Logo depois do AirDrop (que continua sendo o padrão).
             let index = providers.first?.id == QuickShareProvider.airDropId ? 1 : 0
@@ -250,8 +251,13 @@ final class QuickShareService: ObservableObject {
             }
 
             if response == .OK && !panel.urls.isEmpty {
-                Task {
-                    await self?.shareFilesOrText(panel.urls, using: provider, from: view)
+                if provider.id == QuickShareProvider.localSendId, Defaults[.localSendEnabled] {
+                    // Na hora (antes do `defer`), para o notch não fechar entre o seletor e o slot.
+                    LocalSendService.shared.arm(urls: panel.urls, texts: [])
+                } else {
+                    Task {
+                        await self?.shareFilesOrText(panel.urls, using: provider, from: view)
+                    }
                 }
             }
         }
@@ -264,6 +270,17 @@ final class QuickShareService: ObservableObject {
     @MainActor
     func shareFilesOrText(_ items: [Any], using provider: QuickShareProvider, from view: NSView?) async {
         let fileURLs = items.compactMap { $0 as? URL }.filter { $0.isFileURL }
+        if provider.id == QuickShareProvider.localSendId, Defaults[.localSendEnabled] {
+            // Integrado: os itens ficam no slot esperando você escolher o aparelho
+            // (o LocalSendService segura o notch aberto enquanto isso).
+            let texts = items.compactMap { item -> String? in
+                if let url = item as? URL, !url.isFileURL { return url.absoluteString }
+                return (item as? String) ?? (item as? NSString).map(String.init)
+            }
+            LocalSendService.shared.arm(urls: fileURLs, texts: texts)
+            return
+        }
+
         // Stop any previous sharing access
         stopSharingAccessingURLs()
         // Start security-scoped access for all file URLs
@@ -296,6 +313,23 @@ final class QuickShareService: ObservableObject {
                 picker.show(relativeTo: .zero, of: view, preferredEdge: .minY)
             }
         }
+    }
+
+    var isLocalSendAppInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: QuickShareProvider.localSendBundleID) != nil
+    }
+
+    /// Menu do slot integrado: abre o app LocalSend (com os itens esperando, se houver).
+    @MainActor
+    func openLocalSendApp(with pending: LocalSendService.Pending?) async {
+        guard let pending else {
+            if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: QuickShareProvider.localSendBundleID) {
+                _ = try? await NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration())
+            }
+            return
+        }
+        LocalSendService.shared.clearPending()
+        await shareWithLocalSend(pending.urls.map { $0 as Any } + pending.texts.map { $0 as Any })
     }
 
     /// Abre os itens no LocalSend. Texto e links viram um .txt temporário, já que o app só recebe arquivos.

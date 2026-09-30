@@ -25,12 +25,15 @@ enum LiveActivityItem: Identifiable, Equatable {
     case music
     /// Agente de IA rodando sem música tocando (boringCode).
     case agents
+    /// Arquivo chegando pelo LocalSend (boringCode).
+    case localSend(LocalSendService.Incoming)
 
     var id: String {
         switch self {
         case .notification(let notification): "notification-\(notification.id)"
         case .music: "music"
         case .agents: "agents"
+        case .localSend(let transfer): "localsend-\(transfer.id)"
         }
     }
 }

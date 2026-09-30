@@ -102,8 +102,53 @@ struct ShelfSettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+
+            LocalSendSettingsSection()
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Shelf")
+    }
+}
+
+/// boringCode: LocalSend integrado (enviar e receber sem abrir o app).
+private struct LocalSendSettingsSection: View {
+    @Default(.localSendEnabled) private var localSendEnabled
+    @Default(.localSendAlias) private var localSendAlias
+    @Default(.localSendReceive) private var localSendReceive
+    @ObservedObject private var service = LocalSendService.shared
+
+    private var computerName: String { Host.current().localizedName ?? "boringCode" }
+
+    var body: some View {
+        Section {
+            Defaults.Toggle(key: .localSendEnabled) {
+                Text("Send and receive with LocalSend")
+            }
+            Defaults.Toggle(key: .localSendReceive) {
+                Text("Receive files automatically")
+            }
+            .disabled(!localSendEnabled)
+            Defaults.Toggle(key: .localSendOpenOnReceive) {
+                Text("Open the notch when a file arrives")
+            }
+            .disabled(!localSendEnabled || !localSendReceive)
+            TextField("Device name", text: $localSendAlias, prompt: Text(computerName))
+                .disabled(!localSendEnabled)
+            if localSendEnabled {
+                LabeledContent("Nearby") {
+                    Text(service.devices.isEmpty
+                         ? String(localized: "No devices")
+                         : service.devices.map(\.alias).formatted(.list(type: .and)))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+        } header: {
+            Text(verbatim: "LocalSend")
+        } footer: {
+            Text("Phones and computers with LocalSend on the same network show up in the shelf's LocalSend slot — no need to open the app. Received files go to Downloads and appear on the shelf.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
     }
 }

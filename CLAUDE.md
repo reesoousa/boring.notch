@@ -178,3 +178,28 @@ Arquitetura:
 - Testar o núcleo sem o app: compilar `agents/AgentHookServer.swift`, `AgentModels.swift`,
   `AgentHookInstaller.swift` + um `main.swift` com `swiftc` e usar socket em caminho curto.
 - Convive com Open Island instalado: se os dois estiverem abertos, ambos seguram o PermissionRequest.
+
+## LocalSend integrado (`boringNotch/localsend/`)
+
+Decisões do dono (2026-09-30): enviar e receber **sem abrir o app LocalSend**; recebidos são
+**aceitos sozinhos**, vão para **Downloads** e entram no Shelf já selecionados; ao receber o notch
+**abre no Shelf** com a cápsula "Recebendo/Recebido de…" no cabeçalho e fecha sozinho. AirDrop
+continua o serviço padrão do Shelf (LocalSend se escolhe em Ajustes › Shelf).
+
+- Protocolo LocalSend **v2.2** implementado do zero (compatível com o app 1.18): multicast
+  `224.0.0.167:53317` (`LocalSendMulticast`, POSIX, `SO_REUSEPORT`) + busca na /24 como reserva;
+  servidor HTTPS `LocalSendServer` (Network.framework, **mTLS obrigatório**, HTTP/1.1, chunked);
+  `LocalSendClient` (URLSession, certificado do cliente + fingerprint fixado do outro lado).
+- Identidade: RSA-2048 + certificado autoassinado montado em DER (`LocalSendIdentity`), em
+  `~/Library/Application Support/boringCode/boringcode-localsend.{der,key}` (chave 0600) e
+  `SecIdentityCreate` via dlsym — **fora do chaveiro** (no chaveiro o macOS pedia senha quando a
+  assinatura mudava).
+- Recebimento (`LocalSendReceiver`): quarentena nos arquivos, limite do tamanho declarado,
+  espaço em disco, sessão expira parada (30 s), `.part` ocultos limpos na abertura.
+- macOS 26+/27 pode marcar o app com `DenyMulticast` (Ajustes › Privacidade › Rede Local): aí a
+  descoberta depende da busca direta/HTTP; celulares acham o Mac pela porta 53317.
+- Testar sem celular: `defaults write com.reesoousa.boringcode localSendShowThisMac -bool true`
+  mostra aparelhos do próprio Mac (ex.: o app LocalSend). Núcleo compila sozinho com `swiftc`
+  (Models, Identity, Multicast, Server, Receiver, Client + um `main.swift`); o visual do slot sai
+  em PNG com `ImageRenderer` num teste (`LocalSendSlotContent` recebe o estado pronto).
+

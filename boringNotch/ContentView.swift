@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var notificationManager = SystemNotificationManager.shared
     @ObservedObject var agentStore = AgentSessionStore.shared
+    @ObservedObject var localSend = LocalSendService.shared
     /// Which entry of the closed-notch activity stack is on top.
     @State private var activityIndex: Int = 0
     @State private var hoverTask: Task<Void, Never>?
@@ -35,6 +36,8 @@ struct ContentView: View {
     @State private var isHoveringMusicArea = false
     /// O notch abriu sozinho por um pedido de aprovação — fecha sozinho quando resolver.
     @State private var autoOpenedForApproval = false
+    /// Notch aberto sozinho por um arquivo chegando pelo LocalSend.
+    @State private var autoOpenedForReceive = false
 
     @State private var haptics: Bool = false
 
@@ -105,6 +108,11 @@ struct ContentView: View {
     /// explicit "restore previous activity" bookkeeping needed.
     private var liveActivities: [LiveActivityItem] {
         var items: [LiveActivityItem] = []
+
+        // Chegando pelo LocalSend: some sozinho uns segundos depois de terminar.
+        if let transfer = localSend.incoming {
+            items.append(.localSend(transfer))
+        }
 
         if let notification = notificationManager.activeNotification {
             items.append(.notification(notification))
@@ -215,7 +223,7 @@ struct ContentView: View {
             // notification is still in the stack leaves the chin at the
             // notification's width.
             switch activity {
-            case .notification, .agents:
+            case .notification, .agents, .localSend:
                 chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
             case .music:
                 chinWidth += (2 * max(0, displayClosedNotchHeight - 12) + 20 + 2 * liveActivityEdgeMargin + 2)
@@ -354,6 +362,18 @@ struct ContentView: View {
                     }
                     .onChange(of: agentStore.expandRequest) { _, request in
                         if request != nil { expandForAgentApproval() }
+                    }
+                    .onChange(of: localSend.sendCompletion) { _, completion in
+                        // Enviou pelo LocalSend: missão cumprida, o notch fecha.
+                        guard completion != nil, vm.notchState == .open, !vm.isPopoverActive else { return }
+                        vm.close()
+                    }
+                    .onChange(of: localSend.incoming?.id) { _, id in
+                        if id != nil { expandForLocalSendReceive() }
+                    }
+                    .onChange(of: localSend.incoming?.finished) { _, finished in
+                        guard finished == true else { return }
+                        closeAfterLocalSendReceive()
                     }
                     .onChange(of: agentStore.pendingApprovalCount) { _, count in
                         guard count == 0, autoOpenedForApproval else { return }
@@ -505,6 +525,8 @@ struct ContentView: View {
                                   if let status = agentIndicatorStatus {
                                       AgentLiveActivity(status: status)
                                   }
+                              case .localSend(let transfer):
+                                  LocalSendLiveActivity(transfer: transfer)
                               }
                           }
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed {
@@ -849,6 +871,9 @@ extension ContentView {
     private func doOpen() -> Bool {
         if vm.notchState == .closed, pointerIsOverAgentSide() {
             coordinator.currentView = .agents
+        } else if vm.notchState == .closed, case .localSend? = selectedActivity, Defaults[.boringShelf] {
+            // Recebendo pelo LocalSend: abre onde o arquivo vai aparecer.
+            coordinator.currentView = .shelf
         }
         var didOpen = false
         withAnimation(animationSpring) {
@@ -894,7 +919,7 @@ extension ContentView {
         switch activity {
         case .music: return offset > notchHalf - 4
         case .agents: return abs(offset) > notchHalf - 4
-        case .notification: return false
+        case .notification, .localSend: return false
         }
     }
 
@@ -913,6 +938,32 @@ extension ContentView {
         }
     }
 
+    /// Chegou arquivo pelo LocalSend: abre no Shelf, onde ele vai aparecer (só na tela principal).
+    private func expandForLocalSendReceive() {
+        guard Defaults[.localSendOpenOnReceive], Defaults[.boringShelf],
+              vm.screenUUID == coordinator.selectedScreenUUID,
+              notificationManager.activeNotification == nil,
+              !coordinator.firstLaunch else { return }
+
+        if vm.notchState == .closed {
+            coordinator.currentView = .shelf
+            if doOpen() { autoOpenedForReceive = !isHovering }
+        } else if !isHovering, coordinator.currentView != .shelf {
+            withAnimation(.smooth) { coordinator.currentView = .shelf }
+        }
+    }
+
+    /// Deixa o "Recebido de…" à vista um instante e fecha, se foi o LocalSend que abriu.
+    private func closeAfterLocalSendReceive() {
+        guard autoOpenedForReceive else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            guard autoOpenedForReceive, vm.notchState == .open, !isHovering, !vm.isPopoverActive else { return }
+            autoOpenedForReceive = false
+            vm.close()
+        }
+    }
+
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
@@ -920,6 +971,7 @@ extension ContentView {
         if hovering {
             // Você assumiu o notch: ele volta a fechar pelo hover normal.
             autoOpenedForApproval = false
+            autoOpenedForReceive = false
             withAnimation(animationSpring) {
                 isHovering = true
             }

@@ -13,6 +13,9 @@ struct ShelfView: View {
     let dropInteraction: DropInteractionState
     let animation: Animation?
     @StateObject var shelfState = ShelfStateViewModel.shared
+    // boringCode: chegada animada pelo LocalSend.
+    @ObservedObject private var localSend = LocalSendService.shared
+    @State private var arrivalFrames: [UUID: CGRect] = [:]
 
     private let spacing: CGFloat = 8
 
@@ -25,14 +28,23 @@ struct ShelfView: View {
 
         ShelfQuickLookHost { quickLookService in
             HStack(spacing: 12) {
+                // Quadrado (o slot do LocalSend alarga sozinho enquanto mostra aparelhos).
                 FileShareView(dropInteraction: dropInteraction)
-                    .aspectRatio(1, contentMode: .fit)
                 panel(quickLookService: quickLookService)
                     .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $interaction.dragDetectorTargeting) { providers in
                         handleDrop(providers: providers)
                     }
             }
+            .coordinateSpace(name: LocalSendArrival.space)
+            .onPreferenceChange(LocalSendArrivalFramesKey.self) { arrivalFrames = $0 }
+            .overlay { LocalSendArrivalOverlay(frames: arrivalFrames) }
         }
+    }
+
+    /// Chegando pelo LocalSend: fica escondido até o arquivo "pousar" no lugar.
+    private func isArriving(_ item: ShelfItem) -> Bool {
+        guard let incoming = localSend.incoming, !incoming.landed else { return false }
+        return incoming.itemIDs.contains(item.id)
     }
 
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
@@ -80,15 +92,24 @@ struct ShelfView: View {
                         .fontWeight(.medium)
                 }
             } else {
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: spacing) {
-                        ForEach(displayedItems) { item in
-                            ShelfItemView(
-                                item: item,
-                                quickLookService: quickLookService,
-                                dropInteraction: dropInteraction
-                            )
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal) {
+                        LazyHStack(spacing: spacing) {
+                            ForEach(displayedItems) { item in
+                                ShelfItemView(
+                                    item: item,
+                                    quickLookService: quickLookService,
+                                    dropInteraction: dropInteraction
+                                )
+                                .id(item.id)
+                                .opacity(isArriving(item) ? 0 : 1)
+                                .background(LocalSendArrivalFrameReader(id: item.id))
+                            }
                         }
+                    }
+                    .onChange(of: localSend.incoming?.itemIDs) { _, ids in
+                        guard let id = ids?.first else { return }
+                        withAnimation(.smooth(duration: 0.3)) { proxy.scrollTo(id) }
                     }
                 }
                 .padding(-spacing)

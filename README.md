@@ -11,7 +11,8 @@
 <p align="center">
   O notch do seu MacBook para quem programa com IA: música, calendário e shelf do
   <a href="https://github.com/TheBoredTeam/boring.notch">Boring Notch</a> —
-  e agora seus agentes do <b>Claude Code</b> e do <b>Codex</b> bem ali em cima.
+  e agora seus agentes do <b>Claude Code</b> e do <b>Codex</b> bem ali em cima, e arquivos indo e vindo
+  do celular pelo <b>LocalSend</b>.
 </p>
 
 <p align="center">
@@ -19,6 +20,7 @@
   <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-suportado-D97757">
   <img alt="Codex" src="https://img.shields.io/badge/Codex-suportado-4AA3DF">
+  <img alt="LocalSend" src="https://img.shields.io/badge/LocalSend-integrado-2DAE9A">
   <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.1.0%20Astronaut%20Cat-8A8A8E">
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-2F7D32"></a>
 </p>
@@ -34,7 +36,8 @@
 
 O **boringCode** é um fork do [Boring Notch](https://github.com/TheBoredTeam/boring.notch) que mantém tudo o que ele já faz
 (player de música com espectro, calendário, shelf de arquivos, espelho, OSD de volume/brilho) e adiciona um
-**módulo de agentes de IA**, inspirado no [Open Island](https://github.com/Octane0411/open-vibe-island).
+**módulo de agentes de IA**, inspirado no [Open Island](https://github.com/Octane0411/open-vibe-island), e o
+**LocalSend integrado ao shelf** para mandar e receber arquivos do celular.
 
 Roda lado a lado com o Boring Notch original — é outro app (`com.reesoousa.boringcode`).
 
@@ -65,17 +68,34 @@ Ao abrir, o boringCode adiciona hooks em `~/.claude/settings.json` e `~/.codex/h
 
 Se o boringCode estiver fechado, os hooks não fazem nada e o Claude segue normal. Para remover: **Ajustes › Agentes de IA › Remover hooks**.
 
-## Compartilhar com Android e Windows (LocalSend)
+## LocalSend no shelf: arquivos do e para o celular
 
-Se o [LocalSend](https://localsend.org) estiver instalado, ele aparece como opção em
-**Ajustes › Shelf › Quick Share Service**, logo depois do AirDrop (que continua sendo o padrão).
-Solte arquivos no botão de compartilhar do shelf e o LocalSend abre com eles prontos para enviar.
+Envie e receba arquivos de celulares e computadores com [LocalSend](https://localsend.org) (iPhone, Android,
+Windows, Linux) na mesma rede, **sem abrir o app LocalSend** — ele nem precisa estar instalado no Mac.
+
+<p align="center">
+  <img src="docs/images/localsend-enviar.png" alt="Slot do LocalSend no shelf mostrando o aparelho para enviar" width="600"><br><br>
+  <img src="docs/images/localsend-receber.png" alt="Arquivo chegando pelo LocalSend no notch" width="600">
+</p>
+
+- **Enviar:** arraste um arquivo até o slot do LocalSend. Ele abre mostrando o nome do arquivo e os aparelhos por
+  perto; clique no aparelho e pronto — o box enche com o progresso, mostra ✓ e o notch fecha.
+- **Receber:** o notch abre sozinho, o arquivo aparece grande ("de iPhone do Renan") e voa até o shelf, já
+  selecionado para você arrastar. Ele também fica salvo em **Downloads**.
+- **Seguro:** HTTPS com certificado dos dois lados (o mesmo protocolo do LocalSend 1.18), e os arquivos recebidos
+  entram em quarentena — o macOS avisa antes de abrir algo executável.
+
+Para usar, escolha **LocalSend** em **Ajustes › Shelf › Quick Share Service** (o AirDrop continua sendo o padrão).
+No iPhone, o LocalSend precisa estar aberto para aparecer e receber. Na primeira vez, o macOS pede permissão de
+**Rede Local** — é o que deixa o boringCode achar os aparelhos.
 
 ## Instalação
 
-> Um instalador `.dmg` está a caminho. Por enquanto, compile a partir do código.
+**Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
+[guia de instalação](docs/instalar.md). O app é assinado, mas não notarizado: na primeira abertura o macOS pede
+para liberar em **Ajustes › Privacidade e Segurança › Abrir mesmo assim**.
 
-Requisitos: macOS 14+, Xcode 16+.
+**Compilando:** macOS 14+, Xcode 16+.
 
 ```bash
 git clone -b dev https://github.com/reesoousa/boringCode.git
@@ -99,14 +119,23 @@ permite focar a aba certa.
 - Som ao concluir (e qual som)
 - Status da conexão com o Claude Code, instalar/remover hooks
 
+**Ajustes › Shelf › LocalSend** (tudo ligado por padrão):
+
+- Enviar e receber pelo LocalSend
+- Receber arquivos automaticamente
+- Abrir o notch quando chegar um arquivo
+- Nome deste Mac para os outros aparelhos
+
 ## Roadmap
 
 - [x] Claude Code (terminal, VS Code, app Claude)
 - [x] Aprovar/recusar e responder perguntas no notch
-- [x] LocalSend no shelf
+- [x] LocalSend integrado no shelf (enviar e receber sem abrir o app)
 - [x] Codex
-- [ ] Instalador `.dmg` assinado
+- [x] Instalador `.dmg` assinado (Apple ID pessoal, sem notarização)
 - [x] Ícone próprio
+- [ ] Atualizações automáticas (Sparkle com appcast próprio)
+- [ ] Notarização (Developer ID)
 
 ## Créditos e licença
 
@@ -114,5 +143,7 @@ permite focar a aba certa.
   O README original está em [`docs/README-boring-notch.md`](docs/README-boring-notch.md).
 - [Open Island](https://github.com/Octane0411/open-vibe-island), de Octane0411 — referência para a integração com agentes
   (ponte por hooks, fluxo de aprovação, foco no terminal, layout do notch fechado).
+- [LocalSend](https://github.com/localsend/localsend) — o [protocolo](https://github.com/localsend/protocol) que o
+  boringCode fala para trocar arquivos com o app deles (implementação própria, sem código do LocalSend).
 
 Distribuído sob a [GPL-3.0](LICENSE), a mesma licença dos dois projetos.
