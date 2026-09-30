@@ -30,6 +30,9 @@ final class LocalSendService: ObservableObject {
     struct Outgoing: Equatable {
         let deviceID: String
         var phase: SendPhase
+        /// Nome do arquivo (um só) ou nil; e quantos itens vão.
+        var title: String?
+        var count = 1
     }
 
     struct Incoming: Equatable, Identifiable {
@@ -39,6 +42,23 @@ final class LocalSendService: ObservableObject {
         var fraction: Double
         var finished = false
         var failed = false
+        /// Nome do arquivo (um item só) — nil para vários.
+        var title: String?
+        var itemCount = 1
+        var isText = false
+        /// Itens que entraram no Shelf (a animação de chegada voa até eles).
+        var itemIDs: [UUID] = []
+        /// A animação de chegada terminou (ou não vai acontecer): o item aparece no Shelf.
+        var landed = false
+    }
+
+    /// Muda a cada envio concluído — o notch fecha sozinho.
+    @Published private(set) var sendCompletion: UUID?
+
+    /// A animação de chegada pousou o arquivo no Shelf.
+    func markArrivalLanded(_ id: String) {
+        guard incoming?.id == id, incoming?.landed == false else { return }
+        incoming?.landed = true
     }
 
     /// Aparelhos na rede, em ordem alfabética.
@@ -300,6 +320,11 @@ final class LocalSendService: ObservableObject {
         let urls: [URL]
         let texts: [String]
         var count: Int { urls.count + texts.count }
+        /// Nome do arquivo quando é um só (para o topo do slot).
+        var title: String? {
+            guard count == 1 else { return nil }
+            return urls.first?.lastPathComponent ?? texts.first.map { String($0.prefix(40)) }
+        }
     }
 
     @Published private(set) var pending: Pending? {
@@ -377,7 +402,10 @@ final class LocalSendService: ObservableObject {
             withAnimation(.smooth(duration: 0.3)) { outgoing = nil }
             return
         }
-        withAnimation(.smooth(duration: 0.3)) { outgoing = Outgoing(deviceID: device.id, phase: .waiting) }
+        let title = files.count == 1 ? (urls.first?.lastPathComponent ?? texts.first.map { String($0.prefix(40)) }) : nil
+        withAnimation(.smooth(duration: 0.3)) {
+            outgoing = Outgoing(deviceID: device.id, phase: .waiting, title: title, count: urls.count + texts.count)
+        }
 
         let request = LocalSendPrepareUploadRequest(
             info: ownInfo,
@@ -450,8 +478,9 @@ final class LocalSendService: ObservableObject {
         setPhase(phase)
         let deviceID = outgoing?.deviceID
         Task {
-            try? await Task.sleep(for: .seconds(phase == .done ? 1.6 : 2.4))
+            try? await Task.sleep(for: .seconds(phase == .done ? 1.0 : 2.4))
             guard outgoing?.deviceID == deviceID, outgoing?.phase == phase else { return }
+            if phase == .done { sendCompletion = UUID() }  // enviou: o notch fecha
             withAnimation(.smooth(duration: 0.3)) { outgoing = nil }
         }
     }
@@ -479,49 +508,59 @@ final class LocalSendService: ObservableObject {
         switch event {
         case .register(let device):
             upsert(device)
-        case .started(let id, let sender, _, _):
+        case .started(let id, let sender, let title, let itemCount, _):
             withAnimation(.smooth(duration: 0.3)) {
-                incoming = Incoming(id: id, senderAlias: sender.alias, symbolName: sender.symbolName, fraction: 0)
+                incoming = Incoming(id: id, senderAlias: sender.alias, symbolName: sender.symbolName, fraction: 0, title: title, itemCount: itemCount)
             }
         case .progress(let id, let fraction):
             guard incoming?.id == id else { return }
             incoming?.fraction = fraction
         case .finished(let id, let items):
-            addToShelf(items)
+            let added = addToShelf(items)
+            if incoming?.id == id { incoming?.itemIDs = added.map(\.id) }
             finishIncoming(id: id, failed: false)
         case .failed(let id):
             finishIncoming(id: id, failed: true)
         case .text(let text, let sender):
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let item: ShelfItem
             if let url = URL(string: trimmed), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) {
-                addToShelf([ShelfItem(kind: .link(url: url))])
+                item = ShelfItem(kind: .link(url: url))
             } else {
-                addToShelf([ShelfItem(kind: .text(string: text))])
+                item = ShelfItem(kind: .text(string: text))
             }
+            let added = addToShelf([item])
             let id = UUID().uuidString
             withAnimation(.smooth(duration: 0.3)) {
-                incoming = Incoming(id: id, senderAlias: sender.alias, symbolName: sender.symbolName, fraction: 1)
+                incoming = Incoming(
+                    id: id, senderAlias: sender.alias, symbolName: sender.symbolName, fraction: 1,
+                    title: String(trimmed.prefix(60)), isText: true, itemIDs: added.map(\.id)
+                )
             }
             finishIncoming(id: id, failed: false)
         }
     }
 
     /// Entra no Shelf já selecionado: é só arrastar para usar.
-    private func addToShelf(_ urls: [URL]) {
+    @discardableResult
+    private func addToShelf(_ urls: [URL]) -> [ShelfItem] {
         let items = urls.compactMap { url -> ShelfItem? in
             guard let bookmark = try? Bookmark(url: url) else { return nil }
             return ShelfItem(kind: .file(bookmark: bookmark.data))
         }
-        addToShelf(items)
+        return addToShelf(items)
     }
 
-    private func addToShelf(_ items: [ShelfItem]) {
-        guard !items.isEmpty else { return }
+    @discardableResult
+    private func addToShelf(_ items: [ShelfItem]) -> [ShelfItem] {
+        guard !items.isEmpty else { return [] }
         let shelf = ShelfStateViewModel.shared
         shelf.add(items)
         // `add` ignora duplicados; seleciona o que de fato está no Shelf.
         let keys = Set(items.map(\.identityKey))
-        ShelfSelectionModel.shared.select(shelf.items.filter { keys.contains($0.identityKey) })
+        let present = shelf.items.filter { keys.contains($0.identityKey) }
+        ShelfSelectionModel.shared.select(present)
+        return present
     }
 
     private func finishIncoming(id: String, failed: Bool) {
@@ -532,7 +571,10 @@ final class LocalSendService: ObservableObject {
             incoming?.failed = failed
         }
         Task {
-            try? await Task.sleep(for: .seconds(3))
+            // Se ninguém animar a chegada (Shelf fechado), o item aparece mesmo assim.
+            try? await Task.sleep(for: .seconds(2.5))
+            markArrivalLanded(id)
+            try? await Task.sleep(for: .seconds(1.5))
             guard incoming?.id == id else { return }
             withAnimation(.smooth(duration: 0.3)) { incoming = nil }
         }

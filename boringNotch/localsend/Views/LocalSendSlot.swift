@@ -3,10 +3,9 @@
 //  boringCode
 //
 //  Slot do LocalSend no Shelf. Parado, é igual aos outros serviços (ícone +
-//  nome, num quadrado). Com um arquivo por cima, alarga para a direita e mostra
-//  os aparelhos da rede como os itens do Shelf — círculo + nome embaixo, no
-//  espírito do AirDrop. Solte num aparelho para enviar, ou no slot para
-//  escolher depois.
+//  nome, num quadrado). Com um arquivo por cima, abre com a mola do próprio
+//  slot: o nome do arquivo em cima e cada aparelho num box grande que ocupa
+//  o espaço. Solte, clique no aparelho: envia, mostra ✓ e fecha.
 //
 
 import AppKit
@@ -23,9 +22,7 @@ struct LocalSendSlot: View {
     let onOpenApp: (() -> Void)?
 
     @ObservedObject private var service = LocalSendService.shared
-    @State private var isTargeted = false
-    @State private var dragHoverID: String?
-    @State private var tileFrames: [String: CGRect] = [:]
+    @State private var drag: LocalSendSlotContent.DragPreview?
 
     static let dropTypes: [UTType] = [.fileURL, .url, .utf8PlainText, .plainText, .data, .image]
 
@@ -35,23 +32,19 @@ struct LocalSendSlot: View {
                 devices: service.devices,
                 isSearching: service.isSearching,
                 outgoing: service.outgoing,
-                pendingCount: service.pending?.count,
-                isTargeted: isTargeted,
+                pending: service.pending.map { .init(title: $0.title, count: $0.count) },
+                drag: drag,
                 isPreparing: service.isPreparingPending
             ),
             icon: icon,
-            dragHoverID: dragHoverID,
             onSelect: { service.sendPending(to: $0) },
             onCancel: { service.clearPending() }
         )
-        .onPreferenceChange(LocalSendTileFramesKey.self) { tileFrames = $0 }
         .onDrop(of: Self.dropTypes, delegate: SlotDropDelegate(
-            isTargeted: $isTargeted,
-            hoveredID: $dragHoverID,
-            frames: tileFrames,
+            drag: $drag,
             interaction: dropInteraction,
             onEnter: { service.refresh() },
-            onDrop: handleDrop
+            onDrop: { service.arm($0) }
         ))
         .onTapGesture {
             if service.pending == nil, service.outgoing == nil { onPick() }
@@ -65,83 +58,86 @@ struct LocalSendSlot: View {
             }
         }
     }
-
-    private func handleDrop(_ providers: [NSItemProvider], on id: String?) {
-        if let id, let device = service.devices.first(where: { $0.id == id }) {
-            service.send(providers, to: device)
-        } else {
-            service.arm(providers)
-        }
-    }
 }
 
 /// O visual do slot, só a partir do estado (usado também nas imagens de conferência).
 struct LocalSendSlotContent: View {
+    /// O que está sendo arrastado (antes de soltar).
+    struct DragPreview: Equatable {
+        var title: String?
+        var count: Int
+    }
+
+    struct Items: Equatable {
+        var title: String?
+        var count: Int
+    }
+
     struct State: Equatable {
         var devices: [LocalSendDevice]
         var isSearching: Bool
         var outgoing: LocalSendService.Outgoing?
-        var pendingCount: Int?
-        var isTargeted: Bool
+        var pending: Items?
+        var drag: DragPreview?
         var isPreparing = false
 
-        var isExpanded: Bool { isTargeted || pendingCount != nil || outgoing != nil || isPreparing }
+        var isExpanded: Bool { drag != nil || pending != nil || outgoing != nil || isPreparing }
+
+        /// O que mostrar no topo: enviando > esperando você escolher > arrastando.
+        var items: Items? {
+            if let outgoing { return Items(title: outgoing.title, count: outgoing.count) }
+            if let pending { return pending }
+            if let drag { return Items(title: drag.title, count: drag.count) }
+            return nil
+        }
     }
 
     let state: State
     let icon: NSImage?
-    var dragHoverID: String?
     var onSelect: (LocalSendDevice) -> Void = { _ in }
     var onCancel: () -> Void = {}
 
-    @SwiftUI.State private var mouseHoverID: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    static let space = "localsend-slot"
-    static let moreTileID = "localsend-more"
+    // Medidas: o box de um aparelho ocupa o quadrado do slot; mais aparelhos alargam o slot.
+    static let padding: CGFloat = 10
+    static let spacing: CGFloat = 8
+    static let headerHeight: CGFloat = 18
+    /// Boxes visíveis lado a lado (mais que isso: rolagem, ou "+N" durante o arraste).
+    static let maxBoxes = 3
 
-    // Medidas: tiles com a mesma leitura dos itens do Shelf (ícone + nome de 12 pt).
-    static let tileWidth: CGFloat = 76
-    static let tileSpacing: CGFloat = 8
-    static let padding: CGFloat = 12
-    /// Tiles visíveis enquanto arrasta (sem rolagem durante o arraste).
-    static let maxTiles = 4
+    /// A mola do slot (a mesma do ícone de compartilhar do Shelf): abre com um leve "elástico".
+    static let spring = Animation.spring(response: 0.42, dampingFraction: 0.74)
 
-    private var highlightedID: String? { dragHoverID ?? mouseHoverID }
-
-    /// Aparelhos mostrados e se sobra um "+N".
     private var visible: (devices: [LocalSendDevice], more: Int) {
         let devices = state.devices
-        if state.pendingCount != nil || devices.count <= Self.maxTiles { return (devices, 0) }
-        return (Array(devices.prefix(Self.maxTiles - 1)), devices.count - (Self.maxTiles - 1))
+        if state.pending != nil || devices.count <= Self.maxBoxes { return (devices, 0) }
+        return (Array(devices.prefix(Self.maxBoxes - 1)), devices.count - (Self.maxBoxes - 1))
     }
 
-    /// Largura aberta: cabe os tiles lado a lado (até `maxTiles`); nunca menor que o quadrado.
-    private var expandedWidth: CGFloat {
-        let count = state.devices.isEmpty ? 1 : min(visible.devices.count + (visible.more > 0 ? 1 : 0), Self.maxTiles)
-        return CGFloat(count) * Self.tileWidth + CGFloat(max(0, count - 1)) * Self.tileSpacing + 2 * Self.padding
+    private var boxCount: Int {
+        state.devices.isEmpty ? 1 : min(visible.devices.count + (visible.more > 0 ? 1 : 0), Self.maxBoxes)
     }
 
     var body: some View {
-        LocalSendSlotLayout(expandedWidth: state.isExpanded ? expandedWidth : 0) {
+        LocalSendSlotLayout(boxCount: state.isExpanded ? boxCount : 0, padding: Self.padding, spacing: Self.spacing) {
             ZStack {
                 background
 
                 if state.isExpanded {
                     expanded
                         .padding(Self.padding)
-                        .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .leading)))
+                        .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .leading)))
                 } else {
                     idle
                         .padding(18)
-                        .transition(.opacity.combined(with: .scale(scale: 1.04)))
+                        .transition(.opacity.combined(with: .scale(scale: 1.06)))
                 }
             }
-            .coordinateSpace(name: Self.space)
             .contentShape(RoundedRectangle(cornerRadius: 12))
         }
-        .animation(.smooth(duration: 0.35), value: state.isExpanded)
-        .animation(.smooth(duration: 0.35), value: expandedWidth)
+        .animation(reduceMotion ? .smooth(duration: 0.3) : Self.spring, value: state.isExpanded)
+        .animation(reduceMotion ? .smooth(duration: 0.3) : Self.spring, value: boxCount)
     }
 
     // MARK: - Fundo (o mesmo dos outros serviços do Shelf)
@@ -152,7 +148,7 @@ struct LocalSendSlotContent: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(
-                        state.isTargeted ? Color.accentColor.opacity(0.9) : Color.white.opacity(0.1),
+                        state.drag != nil ? Color.accentColor.opacity(0.9) : Color.white.opacity(0.1),
                         style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
                     )
             )
@@ -206,34 +202,42 @@ struct LocalSendSlotContent: View {
     // MARK: - Aberto
 
     private var expanded: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Self.spacing) {
             header
 
             if state.devices.isEmpty {
                 emptyState
                     .transition(.opacity)
-            } else if state.pendingCount != nil, state.devices.count > Self.maxTiles {
-                ScrollView(.horizontal) { tiles }
+            } else if state.pending != nil, state.devices.count > Self.maxBoxes {
+                ScrollView(.horizontal) { boxes }
                     .scrollIndicators(.never)
             } else {
-                tiles
+                boxes
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
+    /// O arquivo que vai: ícone + nome (ou "3 itens").
     private var header: some View {
         HStack(spacing: 6) {
+            Image(systemName: state.items.map { $0.count > 1 ? "doc.on.doc.fill" : "doc.fill" } ?? "doc.fill")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.gray)
+                .frame(width: 14)
+
             Group {
-                if let count = state.pendingCount {
-                    Text(count == 1 ? "Send 1 item to" : "Send \(count) items to")
+                if let title = state.items?.title {
+                    Text(verbatim: title)
                 } else {
-                    Text("Send to")
+                    Text("\(state.items?.count ?? 1) items")
                 }
             }
             .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(.gray)
+            .foregroundStyle(.white.opacity(0.85))
             .lineLimit(1)
+            .truncationMode(.middle)
+            .contentTransition(.opacity)
 
             Spacer(minLength: 0)
 
@@ -243,64 +247,45 @@ struct LocalSendSlotContent: View {
                     .tint(.gray)
                     .transition(.opacity)
             }
-            if state.pendingCount != nil {
-                Button(action: onCancel) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 18, height: 18)
-                        .background(.white.opacity(0.1), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Cancel"))
+            if state.pending != nil {
+                LocalSendIconButton(systemName: "xmark", label: "Cancel", action: onCancel)
+                    .transition(.opacity)
             }
         }
-        .frame(height: 16)
+        .frame(height: Self.headerHeight)
     }
 
-    private var tiles: some View {
-        HStack(alignment: .top, spacing: Self.tileSpacing) {
+    private var boxes: some View {
+        HStack(spacing: Self.spacing) {
             ForEach(visible.devices) { device in
-                LocalSendDeviceTile(
+                LocalSendDeviceBox(
                     device: device,
-                    highlighted: highlightedID == device.id,
-                    targeted: dragHoverID == device.id,
                     phase: state.outgoing?.deviceID == device.id ? state.outgoing?.phase : nil,
-                    dimmed: state.outgoing.map { $0.deviceID != device.id } ?? false
-                )
-                .background(LocalSendTileFrameReader(id: device.id))
-                .onHover { hovering in
-                    guard state.pendingCount != nil else { return }
-                    withAnimation(.smooth(duration: 0.2)) {
-                        mouseHoverID = hovering ? device.id : (mouseHoverID == device.id ? nil : mouseHoverID)
-                    }
+                    dimmed: state.outgoing.map { $0.deviceID != device.id } ?? false,
+                    selectable: state.pending != nil
+                ) {
+                    onSelect(device)
                 }
-                .onTapGesture { onSelect(device) }
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
             if visible.more > 0 {
-                moreTile(visible.more)
+                moreBox(visible.more)
             }
         }
+        .frame(maxHeight: .infinity)
     }
 
-    private func moreTile(_ count: Int) -> some View {
-        VStack(spacing: 6) {
-            Circle()
-                .fill(Color.white.opacity(dragHoverID == Self.moreTileID ? 0.14 : 0.06))
-                .frame(width: LocalSendDeviceTile.circleSize, height: LocalSendDeviceTile.circleSize)
-                .overlay {
-                    Text(verbatim: "+\(count)")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.gray)
-                }
+    private func moreBox(_ count: Int) -> some View {
+        VStack(spacing: 4) {
+            Text(verbatim: "+\(count)")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(.gray)
             Text("more")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.gray)
         }
-        .frame(width: Self.tileWidth)
-        .padding(.vertical, 4)
-        .background(LocalSendTileFrameReader(id: Self.moreTileID))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.04)))
     }
 
     private var emptyState: some View {
@@ -323,132 +308,160 @@ struct LocalSendSlotContent: View {
     }
 }
 
-/// Um aparelho: círculo com o ícone e o nome embaixo, como um item do Shelf.
-/// O anel em volta do círculo mostra o envio; um selo marca ✓ ou erro.
-struct LocalSendDeviceTile: View {
+/// Um aparelho num box grande: ícone + nome + linha de status. Enviando, o box
+/// enche de baixo para cima com o progresso; no fim o ícone vira ✓.
+struct LocalSendDeviceBox: View {
     let device: LocalSendDevice
-    let highlighted: Bool
-    let targeted: Bool
     let phase: LocalSendService.SendPhase?
     let dimmed: Bool
+    /// Tem itens esperando: o box é clicável (com hover).
+    let selectable: Bool
+    var onTap: () -> Void = {}
 
-    static let circleSize: CGFloat = 44
+    @State private var isHovering = false
+    @State private var waitingPulse = false
 
-    @SwiftUI.State private var waitingPulse = false
+    private var symbol: String {
+        switch phase {
+        case .done?: "checkmark"
+        case .failed?: "xmark"
+        default: device.symbolName
+        }
+    }
 
-    private var failureMessage: String? {
-        if case .failed(let message)? = phase { return message }
-        return nil
+    private var symbolColor: Color {
+        switch phase {
+        case .done?: .green
+        case .failed?: .red
+        default: .white.opacity(0.9)
+        }
+    }
+
+    private var status: Text {
+        switch phase {
+        case .waiting?: Text("Waiting…")
+        case .sending(let fraction)?: Text(verbatim: "\(Int(fraction * 100))%")
+        case .done?: Text("Sent")
+        case .failed(let message)?: Text(verbatim: message)
+        case nil: Text(verbatim: device.deviceModel ?? "")
+        }
     }
 
     var body: some View {
-        VStack(spacing: 6) {
-            ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(Color.white.opacity(highlighted ? 0.14 : 0.09))
-                    .frame(width: Self.circleSize, height: Self.circleSize)
-                    .overlay {
-                        Image(systemName: device.symbolName)
-                            .font(.system(size: 19, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-                    .overlay { ring }
+        VStack(spacing: 5) {
+            Image(systemName: symbol)
+                .font(.system(size: 26, weight: .medium))
+                .foregroundStyle(symbolColor)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(height: 30)
 
-                badge
-                    .offset(x: 3, y: 3)
-            }
-
-            Text(failureMessage ?? device.alias)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(failureMessage == nil ? Color.white.opacity(0.9) : Color.gray)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
+            Text(verbatim: device.alias)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
                 .truncationMode(.tail)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity)
-                .contentTransition(.opacity)
+
+            status
+                .font(.system(size: 10, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(.gray)
+                .lineLimit(1)
+                .contentTransition(.numericText())
         }
-        .frame(width: LocalSendSlotContent.tileWidth)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(targeted ? Color.accentColor.opacity(0.25) : Color.white.opacity(highlighted ? 0.06 : 0))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.accentColor.opacity(targeted ? 0.9 : 0), lineWidth: 2)
-        )
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            GeometryReader { geometry in
+                ZStack(alignment: .bottom) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                    // Hover igual ao dos botões do app (HoverButton).
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.gray.opacity(isHovering && selectable ? 0.2 : 0))
+                    if case .sending(let fraction)? = phase {
+                        Rectangle()
+                            .fill(Color.accentColor.opacity(0.3))
+                            .frame(height: geometry.size.height * fraction)
+                            .animation(.smooth(duration: 0.3), value: fraction)
+                    }
+                    if case .waiting? = phase {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(waitingPulse ? 0.1 : 0.02))
+                            .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: waitingPulse)
+                            .onAppear { waitingPulse = true }
+                            .onDisappear { waitingPulse = false }
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
         .opacity(dimmed ? 0.4 : 1)
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .animation(.smooth(duration: 0.25), value: highlighted)
-        .animation(.smooth(duration: 0.25), value: targeted)
+        .onHover { hovering in
+            withAnimation(.smooth(duration: 0.3)) { isHovering = hovering }
+        }
+        .onTapGesture { if selectable { onTap() } }
         .animation(.smooth(duration: 0.3), value: phase)
         .help(Text(verbatim: device.deviceModel.map { "\(device.alias) · \($0)" } ?? device.alias))
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selectable ? .isButton : [])
     }
+}
 
-    @ViewBuilder
-    private var ring: some View {
-        switch phase {
-        case .waiting?:
-            // Esperando o outro lado aceitar: anel respira devagar.
-            Circle()
-                .stroke(Color.white.opacity(waitingPulse ? 0.55 : 0.2), lineWidth: 2.5)
-                .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: waitingPulse)
-                .onAppear { waitingPulse = true }
-                .onDisappear { waitingPulse = false }
-        case .sending(let fraction)?:
-            ZStack {
-                Circle().stroke(Color.white.opacity(0.12), lineWidth: 2.5)
-                Circle()
-                    .trim(from: 0, to: max(0.03, fraction))
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.smooth(duration: 0.25), value: fraction)
-            }
-        default:
-            EmptyView()
+/// Ícone solto com o hover dos botões do app (cápsula cinza, como o HoverButton).
+struct LocalSendIconButton: View {
+    let systemName: String
+    let label: LocalizedStringKey
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.gray)
+                .frame(width: 18, height: 18)
+                .background(Capsule().fill(Color.gray.opacity(isHovering ? 0.2 : 0)))
+                .contentShape(Capsule())
         }
-    }
-
-    @ViewBuilder
-    private var badge: some View {
-        switch phase {
-        case .done?:
-            statusBadge("checkmark.circle.fill", color: .green)
-        case .failed?:
-            statusBadge("xmark.circle.fill", color: .red)
-        default:
-            EmptyView()
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.smooth(duration: 0.3)) { isHovering = hovering }
         }
-    }
-
-    private func statusBadge(_ symbol: String, color: Color) -> some View {
-        Image(systemName: symbol)
-            .font(.system(size: 16))
-            .symbolRenderingMode(.palette)
-            .foregroundStyle(.white, color)
-            .background(Circle().fill(.black).padding(1))
-            .transition(.scale(scale: 0.5).combined(with: .opacity))
+        .accessibilityLabel(Text(label))
     }
 }
 
 // MARK: - Largura do slot
 
-/// Quadrado parado; aberto, alarga para caber os tiles. A largura é animável,
-/// então o Shelf ao lado encolhe junto, sem pulo.
+/// Quadrado parado; aberto, cada aparelho ganha um box do tamanho do quadrado.
+/// A largura é animável, então o Shelf ao lado encolhe junto (com a mesma mola).
 private struct LocalSendSlotLayout: Layout {
     /// 0 = quadrado.
-    var expandedWidth: CGFloat
+    var boxCount: Int
+    let padding: CGFloat
+    let spacing: CGFloat
+    var animatedCount: CGFloat
+
+    init(boxCount: Int, padding: CGFloat, spacing: CGFloat) {
+        self.boxCount = boxCount
+        self.padding = padding
+        self.spacing = spacing
+        animatedCount = CGFloat(boxCount)
+    }
 
     var animatableData: CGFloat {
-        get { expandedWidth }
-        set { expandedWidth = newValue }
+        get { animatedCount }
+        set { animatedCount = newValue }
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let height = proposal.height ?? 140
-        return CGSize(width: max(height, expandedWidth), height: height)
+        let box = height - 2 * padding
+        let count = max(1, animatedCount)
+        let width = count * box + (count - 1) * spacing + 2 * padding
+        return CGSize(width: max(height, width), height: height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -458,72 +471,45 @@ private struct LocalSendSlotLayout: Layout {
     }
 }
 
-// MARK: - Arrastar por cima de um aparelho
+// MARK: - Arrastar
 
-struct LocalSendTileFramesKey: PreferenceKey {
-    static let defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { $1 })
-    }
-}
-
-private struct LocalSendTileFrameReader: View {
-    let id: String
-
-    var body: some View {
-        GeometryReader { geometry in
-            Color.clear.preference(key: LocalSendTileFramesKey.self, value: [id: geometry.frame(in: .named(LocalSendSlotContent.space))])
-        }
-    }
-}
-
-/// Um alvo só para o slot inteiro; o aparelho sob o cursor sai da posição do arraste.
-/// Alvos separados por aparelho piscariam ao passar de um para o outro.
+/// Enquanto o arquivo está por cima, mostra o nome dele; ao soltar, ele fica
+/// esperando você clicar no aparelho.
 private struct SlotDropDelegate: DropDelegate {
-    @Binding var isTargeted: Bool
-    @Binding var hoveredID: String?
-    let frames: [String: CGRect]
+    @Binding var drag: LocalSendSlotContent.DragPreview?
     let interaction: DropInteractionState
     let onEnter: () -> Void
-    let onDrop: ([NSItemProvider], String?) -> Void
-
-    private func tile(at location: CGPoint) -> String? {
-        frames.first { $0.value.contains(location) }?.key
-    }
+    let onDrop: ([NSItemProvider]) -> Void
 
     func validateDrop(info: DropInfo) -> Bool {
         info.hasItemsConforming(to: LocalSendSlot.dropTypes)
     }
 
     func dropEntered(info: DropInfo) {
-        isTargeted = true
+        let providers = info.itemProviders(for: LocalSendSlot.dropTypes)
+        drag = .init(
+            title: providers.count == 1 ? providers.first?.suggestedName : nil,
+            count: max(1, providers.count)
+        )
         interaction.dropZoneTargeting = true
-        hoveredID = tile(at: info.location)
         onEnter()
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        let id = tile(at: info.location)
-        if id != hoveredID {
-            withAnimation(.smooth(duration: 0.2)) { hoveredID = id }
-        }
-        return DropProposal(operation: .copy)
+        DropProposal(operation: .copy)
     }
 
     func dropExited(info: DropInfo) {
-        isTargeted = false
+        drag = nil
         interaction.dropZoneTargeting = false
-        hoveredID = nil
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        let id = tile(at: info.location)
         let providers = info.itemProviders(for: LocalSendSlot.dropTypes)
         interaction.dropEvent = true
         interaction.dropZoneTargeting = false
-        hoveredID = nil
-        isTargeted = false
-        onDrop(providers, id)
+        onDrop(providers)  // `isPreparingPending` segura o slot aberto até os itens chegarem
+        drag = nil
         return true
     }
 }

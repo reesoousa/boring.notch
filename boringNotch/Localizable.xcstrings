@@ -32042,6 +32042,66 @@
           }
         }
       }
+    },
+    "%lld items" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld itens"
+          }
+        }
+      }
+    },
+    "Waiting…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aguardando…"
+          }
+        }
+      }
+    },
+    "Sent" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviado"
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de %@"
+          }
+        }
+      }
+    },
+    "Received" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recebido"
+          }
+        }
+      }
+    },
+    "Couldn't receive" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não deu para receber"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

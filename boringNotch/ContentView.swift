@@ -363,6 +363,11 @@ struct ContentView: View {
                     .onChange(of: agentStore.expandRequest) { _, request in
                         if request != nil { expandForAgentApproval() }
                     }
+                    .onChange(of: localSend.sendCompletion) { _, completion in
+                        // Enviou pelo LocalSend: missão cumprida, o notch fecha.
+                        guard completion != nil, vm.notchState == .open, !vm.isPopoverActive else { return }
+                        vm.close()
+                    }
                     .onChange(of: localSend.incoming?.id) { _, id in
                         if id != nil { expandForLocalSendReceive() }
                     }

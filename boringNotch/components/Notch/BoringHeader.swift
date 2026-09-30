@@ -47,8 +47,8 @@ struct BoringHeader: View {
                              accent: coordinator.binding(for: vm.screenUUID).accent
                         )
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
-                    } else if let transfer = localSend.incoming {
-                        // boringCode: chegando pelo LocalSend.
+                    } else if let transfer = localSend.incoming, coordinator.currentView != .shelf || !Defaults[.boringShelf] {
+                        // No Shelf a chegada já aparece grande; a cápsula é para as outras abas.
                         LocalSendHeaderPill(transfer: transfer)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {

@@ -18,7 +18,8 @@ import os
 
 final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado em `queue`
     enum Event: Sendable {
-        case started(id: String, sender: LocalSendDevice, fileCount: Int, totalBytes: Int64)
+        /// `title`: nome do arquivo/pasta quando é um só item; nil para vários.
+        case started(id: String, sender: LocalSendDevice, title: String?, itemCount: Int, totalBytes: Int64)
         case progress(id: String, fraction: Double)
         /// Itens de primeiro nível salvos (arquivos ou pastas).
         case finished(id: String, items: [URL])
@@ -176,7 +177,12 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado em
             return .message(507, "Not enough space")
         }
         session = newSession
-        onEvent?(.started(id: newSession.id, sender: sender, fileCount: incoming.count, totalBytes: newSession.totalBytes))
+        // O que vai aparecer no Shelf: arquivos soltos + pastas de primeiro nível.
+        let topLevel = Set(payload.files.values.compactMap { file in
+            file.fileName.split(whereSeparator: { $0 == "/" || $0 == "\\" }).first.map(String.init)
+        })
+        let title = topLevel.count == 1 ? topLevel.first : nil
+        onEvent?(.started(id: newSession.id, sender: sender, title: title, itemCount: max(1, topLevel.count), totalBytes: newSession.totalBytes))
         watch(newSession)
 
         return .json(LocalSendPrepareUploadResponse(

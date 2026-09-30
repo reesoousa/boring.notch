@@ -44,12 +44,10 @@ private struct LocalSendProgressRing: View {
     var body: some View {
         ZStack {
             if transfer.finished {
-                Image(systemName: transfer.failed ? "xmark.circle.fill" : "checkmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .symbolRenderingMode(.hierarchical)
+                // Só o símbolo, como os outros ícones do app (sem círculo atrás).
+                Image(systemName: transfer.failed ? "xmark" : "checkmark")
+                    .font(.system(size: size * 0.5, weight: .bold))
                     .foregroundStyle(transfer.failed ? Color.red : Color.green)
-                    .frame(width: size * 0.8, height: size * 0.8)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
             } else {
                 Circle()
