@@ -513,6 +513,11 @@ extension Defaults.Keys {
     static let shelfTapToOpen = Key<Bool>("shelfTapToOpen", default: true)
     static let quickShareProvider = Key<String>("quickShareProvider", default: QuickShareProvider.defaultProvider.id)
     static let copyOnDrag = Key<Bool>("copyOnDrag", default: false)
+    // LocalSend integrado (boringCode)
+    static let localSendEnabled = Key<Bool>("localSendEnabled", default: true)
+    static let localSendReceive = Key<Bool>("localSendReceive", default: true)
+    /// Nome deste Mac para os outros aparelhos; vazio = nome do computador.
+    static let localSendAlias = Key<String>("localSendAlias", default: "")
     static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)
     static let expandedDragDetection = Key<Bool>("expandedDragDetection", default: true)
     static let reverseShelfOrdering = Key<Bool>("reverseShelfOrdering", default: false)

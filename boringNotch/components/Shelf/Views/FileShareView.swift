@@ -14,6 +14,7 @@ struct FileShareView: View {
     let dropInteraction: DropInteractionState
     @StateObject private var quickShare = QuickShareService.shared
     @Default(.quickShareProvider) var quickShareProvider: String
+    @Default(.localSendEnabled) private var localSendEnabled
 
     @State private var hostView: NSView?
     @State private var interactionNonce: UUID = .init()
@@ -24,9 +25,26 @@ struct FileShareView: View {
     }
 
     var body: some View {
+        if selectedProvider.id == QuickShareProvider.localSendId, localSendEnabled {
+            // boringCode: LocalSend integrado — lista os aparelhos da rede no próprio slot.
+            LocalSendSlot(
+                dropInteraction: dropInteraction,
+                icon: quickShare.icon(for: selectedProvider.id, size: 34),
+                onPick: { Task { await handleClick() } },
+                onOpenApp: quickShare.isLocalSendAppInstalled ? {
+                    Task { await quickShare.openLocalSendApp(with: LocalSendService.shared.pending) }
+                } : nil
+            )
+            .background(NSViewHost(view: $hostView))
+        } else {
+            standardSlot
+        }
+    }
+
+    private var standardSlot: some View {
         @Bindable var interaction = dropInteraction
 
-        dropArea
+        return dropArea
             .background(NSViewHost(view: $hostView))
             .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data, .image], isTargeted: $interaction.dropZoneTargeting) { providers in
                 interactionNonce = .init()

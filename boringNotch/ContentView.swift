@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var notificationManager = SystemNotificationManager.shared
     @ObservedObject var agentStore = AgentSessionStore.shared
+    @ObservedObject var localSend = LocalSendService.shared
     /// Which entry of the closed-notch activity stack is on top.
     @State private var activityIndex: Int = 0
     @State private var hoverTask: Task<Void, Never>?
@@ -105,6 +106,11 @@ struct ContentView: View {
     /// explicit "restore previous activity" bookkeeping needed.
     private var liveActivities: [LiveActivityItem] {
         var items: [LiveActivityItem] = []
+
+        // Chegando pelo LocalSend: some sozinho uns segundos depois de terminar.
+        if let transfer = localSend.incoming {
+            items.append(.localSend(transfer))
+        }
 
         if let notification = notificationManager.activeNotification {
             items.append(.notification(notification))
@@ -215,7 +221,7 @@ struct ContentView: View {
             // notification is still in the stack leaves the chin at the
             // notification's width.
             switch activity {
-            case .notification, .agents:
+            case .notification, .agents, .localSend:
                 chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
             case .music:
                 chinWidth += (2 * max(0, displayClosedNotchHeight - 12) + 20 + 2 * liveActivityEdgeMargin + 2)
@@ -505,6 +511,8 @@ struct ContentView: View {
                                   if let status = agentIndicatorStatus {
                                       AgentLiveActivity(status: status)
                                   }
+                              case .localSend(let transfer):
+                                  LocalSendLiveActivity(transfer: transfer)
                               }
                           }
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed {
@@ -849,6 +857,9 @@ extension ContentView {
     private func doOpen() -> Bool {
         if vm.notchState == .closed, pointerIsOverAgentSide() {
             coordinator.currentView = .agents
+        } else if vm.notchState == .closed, case .localSend? = selectedActivity, Defaults[.boringShelf] {
+            // Recebendo pelo LocalSend: abre onde o arquivo vai aparecer.
+            coordinator.currentView = .shelf
         }
         var didOpen = false
         withAnimation(animationSpring) {
@@ -894,7 +905,7 @@ extension ContentView {
         switch activity {
         case .music: return offset > notchHalf - 4
         case .agents: return abs(offset) > notchHalf - 4
-        case .notification: return false
+        case .notification, .localSend: return false
         }
     }
 
