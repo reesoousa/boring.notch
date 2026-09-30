@@ -34,6 +34,7 @@ struct TabSelectionView: View {
             case .home: true
             case .shelf: boringShelf
             case .agents: agentsEnabled
+            case .monitor: false  // tem botão próprio no cabeçalho
             }
         }
     }

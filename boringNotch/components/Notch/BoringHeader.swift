@@ -52,8 +52,20 @@ struct BoringHeader: View {
                         LocalSendHeaderPill(transfer: transfer)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {
-                        if Defaults[.showMirror] && coordinator.currentView == .home {
+                        // boringCode: monitor do sistema, à esquerda do espelho. Os dois aparecem na
+                        // Home e no Monitor, para o botão não escorregar de lugar ao ser clicado.
+                        if Defaults[.monitorEnabled] && (coordinator.currentView == .home || coordinator.currentView == .monitor) {
+                            SystemMonitorHeaderButton(isActive: coordinator.currentView == .monitor) {
+                                withAnimation(.smooth) {
+                                    coordinator.currentView = coordinator.currentView == .monitor ? .home : .monitor
+                                }
+                            }
+                        }
+                        if Defaults[.showMirror] && (coordinator.currentView == .home || coordinator.currentView == .monitor) {
                             Button(action: {
+                                if coordinator.currentView == .monitor {
+                                    withAnimation(.smooth) { coordinator.currentView = .home }
+                                }
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()

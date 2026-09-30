@@ -21,7 +21,7 @@
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-suportado-D97757">
   <img alt="Codex" src="https://img.shields.io/badge/Codex-suportado-4AA3DF">
   <img alt="LocalSend" src="https://img.shields.io/badge/LocalSend-integrado-2DAE9A">
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.2.0%20Courier%20Cat-8A8A8E">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.3.0%20Lookout%20Cat-8A8A8E">
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-2F7D32"></a>
 </p>
 
@@ -89,6 +89,14 @@ Para usar, escolha **LocalSend** em **Ajustes › Shelf › Quick Share Service*
 No iPhone, o LocalSend precisa estar aberto para aparecer e receber. Na primeira vez, o macOS pede permissão de
 **Rede Local** — é o que deixa o boringCode achar os aparelhos.
 
+## Monitor do sistema
+
+CPU, memória, armazenamento, bateria, download e upload num relance: o botão ao lado do espelho, no notch aberto,
+abre seis cartões no visual do Boring Notch — eles chegam em cascata, as barrinhas crescem e os números contam até o
+valor atual. As leituras vêm direto do sistema e **só acontecem
+com o monitor aberto**: fechado, não gasta nada. Ajustes › Monitor do sistema: quais métricas mostrar e o intervalo de
+atualização (1, 2 ou 5 s).
+
 ## Instalação
 
 **Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
@@ -134,6 +142,7 @@ permite focar a aba certa.
 - [x] Codex
 - [x] Instalador `.dmg` assinado (Apple ID pessoal, sem notarização)
 - [x] Ícone próprio
+- [x] Monitor do sistema (CPU, memória, armazenamento, bateria, rede)
 - [ ] Atualizações automáticas (Sparkle com appcast próprio)
 - [ ] Notarização (Developer ID)
 

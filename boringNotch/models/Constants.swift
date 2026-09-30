@@ -507,6 +507,17 @@ extension Defaults.Keys {
     static let agentsCompletionSound = Key<Bool>("agentsCompletionSound", default: true)
     static let agentsCompletionSoundName = Key<String>("agentsCompletionSoundName", default: "Bottle")
 
+    // MARK: System monitor (boringCode)
+    static let monitorEnabled = Key<Bool>("monitorEnabled", default: true)
+    static let monitorShowCPU = Key<Bool>("monitorShowCPU", default: true)
+    static let monitorShowMemory = Key<Bool>("monitorShowMemory", default: true)
+    static let monitorShowStorage = Key<Bool>("monitorShowStorage", default: true)
+    static let monitorShowBattery = Key<Bool>("monitorShowBattery", default: true)
+    static let monitorShowDownload = Key<Bool>("monitorShowDownload", default: true)
+    static let monitorShowUpload = Key<Bool>("monitorShowUpload", default: true)
+    /// Segundos entre leituras (só enquanto a aba está aberta).
+    static let monitorInterval = Key<Double>("monitorInterval", default: 1)
+
     // MARK: Shelf
     static let boringShelf = Key<Bool>("boringShelf", default: true)
     static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)

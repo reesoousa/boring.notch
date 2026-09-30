@@ -14,7 +14,7 @@ recursos do [Open Island](https://github.com/Octane0411/open-vibe-island): monit
 - Swift 5/6 + SwiftUI + AppKit, projeto Xcode (`boringNotch.xcodeproj`), macOS 14+.
 - App **sem sandbox** (ver "Módulo de agentes") + helper XPC (`BoringNotchXPCHelper/`)
   para trabalho privilegiado (Accessibility, brilho, notificações).
-- Versão atual: **0.2.0 "Courier Cat"** (`MARKETING_VERSION` no projeto; apelido em
+- Versão atual: **0.3.0 "Lookout Cat"** (`MARKETING_VERSION` no projeto; apelido em
   `BoringCodeRelease.name`, `AboutView.swift`).
 - SPM: Defaults (settings), Sparkle (updates), SkyLightWindow, Lottie, Pow, KeyboardShortcuts,
   LaunchAtLogin, swiftui-introspect, swift-collections, AsyncXPCConnection, MacroVisionKit.
@@ -202,4 +202,17 @@ continua o serviço padrão do Shelf (LocalSend se escolhe em Ajustes › Shelf)
   mostra aparelhos do próprio Mac (ex.: o app LocalSend). Núcleo compila sozinho com `swiftc`
   (Models, Identity, Multicast, Server, Receiver, Client + um `main.swift`); o visual do slot sai
   em PNG com `ImageRenderer` num teste (`LocalSendSlotContent` recebe o estado pronto).
+
+## Monitor do sistema (`boringNotch/monitor/`)
+
+- Aba `NotchViews.monitor`, aberta pelo botão do cabeçalho (à esquerda do espelho; os dois aparecem na Home e no
+  Monitor para o botão não mudar de lugar). Não entra na barra de abas.
+- `SystemSampler` (actor): CPU por `host_statistics` (ticks), memória por `host_statistics64` (apps + wired +
+  comprimida, como o Monitor de Atividade), bateria reaproveita `BatteryStatusViewModel` (some sem bateria interna), disco por `volumeAvailableCapacityForImportantUsage`
+  (relê a cada 10 s), rede por `sysctl NET_RT_IFLIST2` (contadores de 64 bits de `en*`/`pdp_ip*`; VPN fica de fora).
+- `SystemMonitor` só mede entre `begin`/`end` (onAppear/onDisappear da aba): fechado, custo zero. Escala das barras de
+  rede = pico recente com decaimento (mínimo 256 KB/s).
+- Visual: grade 3×2 (4 métricas → 2×2), cartões de canto 12 (`white 0.06`), número 17 pt + unidade 11 pt cinza, barra do
+  player (4 pt, trilho cinza 0.3, branco). Entrada em cascata diagonal (desfoque → nítido, mola) e `CountingText`
+  (Animatable) conta do zero junto com a barra; respeita Reduzir movimento. Ajustes › Monitor do sistema.
 
