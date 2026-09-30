@@ -84,8 +84,8 @@ xcodebuild -project boringNotch.xcodeproj -scheme boringNotch -derivedDataPath b
 - Rodar junto com o Boring Notch de `/Applications` funciona, mas os dois desenham no notch —
   feche o instalado para testar visualmente.
 - Projeto Xcode: ad-hoc (`CODE_SIGN_IDENTITY[sdk=macosx*] = "-"`), sem Team.
-- **O build Release ad-hoc cai na abertura** (library validation recusa o
-  `MediaRemoteAdapter.framework`: "different Team IDs"). O Debug roda. Ver "Distribuição".
+- **Release ad-hoc cai na abertura** (library validation: "different Team IDs"). Por isso o
+  `make-dmg.sh` re-assina tudo com o mesmo "Apple Development" (Team ID). Ver "Distribuição".
 
 ## Regras de git
 
@@ -98,26 +98,34 @@ xcodebuild -project boringNotch.xcodeproj -scheme boringNotch -derivedDataPath b
   Sincronizar: `git fetch upstream && git merge upstream/dev` (numa branch, nunca direto na `dev`).
 - `reference/` nunca entra no git.
 
-## Distribuição (pendente — próximos passos do DMG)
+## Distribuição (DMG)
 
-Objetivo: `.dmg` fácil para os colegas da empresa (vários usam Mac). Pausado até o dono escolher
-a assinatura. `scripts/make-dmg.sh` já faz: build Release → `codesign --verify` → dmgbuild (hashes
-travados, venv em `build.noindex/dmgenv`) → `dist/boringCode-<versão>.dmg` (layout `Configuration/dmg/`).
+Decisão do dono (2026-09-30): **Apple ID pessoal grátis** (opção 2). Alternativas descartadas por
+ora: Developer ID da empresa (sem alerta, precisa da conta paga) e
+`disable-library-validation` (sem conta, menos protegido).
 
-1. **Escolher a assinatura** (decisão do dono):
-   - **Developer ID da empresa** (recomendado; perguntar ao TI) → assinar + notarizar, abre sem alerta.
-   - **Apple ID pessoal grátis** (Xcode › Ajustes › Contas) → dá Team ID, resolve a queda; colegas
-     liberam uma vez em Ajustes › Privacidade e Segurança › "Abrir mesmo assim".
-   - **`com.apple.security.cs.disable-library-validation`** → funciona sem conta, menos protegido;
-     também exige "Abrir mesmo assim". Pedir OK explícito (o classificador pode barrar).
-2. Configurar `DEVELOPMENT_TEAM`/identidade (ou o entitlement) e, se Developer ID, notarização
-   (`xcrun notarytool` + `stapler`) dentro do `make-dmg.sh`.
-3. Gerar o DMG a partir da `dev` e **testar abrindo o app de dentro do DMG montado**
-   (crash → `~/Library/Logs/DiagnosticReports/boringCode-*.ips`).
-4. Opcional: fundo próprio do DMG (660×400, `Configuration/dmg/.background/background.tiff`).
-5. Updates: Sparkle aponta para `https://reesoousa.github.io/boringCode/appcast.xml` (não existe);
-   gerar chave EdDSA própria + GitHub Pages, ou desligar a busca automática até lá.
-6. Publicar como Release no GitHub (`gh release create v0.1.0 dist/boringCode-0.1.0.dmg`).
+`scripts/make-dmg.sh`: build Release **universal** (arm64 + x86_64) → re-assina de dentro para
+fora (`scripts/lib/sign-app.sh`) com a identidade "Apple Development" do chaveiro (ou
+`SIGN_IDENTITY=…`) → `codesign --verify` → dmgbuild (hashes travados, venv em
+`build.noindex/dmgenv`) → `dist/boringCode-<versão>.dmg` (layout `Configuration/dmg/`).
+
+- Pré-requisitos na máquina: Apple ID em Xcode › Ajustes › Contas + certificado "Apple
+  Development" (Gerenciar Certificados › +) + intermediário **Apple WWDR G3** no chaveiro
+  (sem ele: "unable to build chain" / `errSecInternalComponent`; baixar de
+  apple.com/certificateauthority). Team pessoal: `NPAAQDQK4Y`. Certificado vence em 1 ano.
+- Sem notarização: `spctl` dá "rejected"; quem recebe libera uma vez em Ajustes › Privacidade e
+  Segurança › "Abrir mesmo assim". Instruções para quem recebe: `docs/instalar.md`.
+- Sempre testar **abrindo o app de dentro do DMG montado** (crash →
+  `~/Library/Logs/DiagnosticReports/boringCode-*.ips`) e, depois, tirar `/Volumes/boringCode` do
+  LaunchServices (o `install-dev.sh` faz isso).
+
+Próximos passos:
+1. Opcional: fundo próprio do DMG (660×400, `Configuration/dmg/.background/background.tiff`).
+2. Updates: Sparkle aponta para `https://reesoousa.github.io/boringCode/appcast.xml` (não existe;
+   busca automática desligada em `SUEnableAutomaticChecks`). Gerar chave EdDSA própria + Pages.
+3. Publicar como Release no GitHub (`gh release create v0.1.0 dist/boringCode-0.1.0.dmg`).
+4. Se a empresa tiver Developer ID: trocar a identidade e adicionar notarização
+   (`xcrun notarytool` + `stapler`) no `make-dmg.sh`.
 
 ## Módulo de agentes (`boringNotch/agents/`)
 
