@@ -26,21 +26,8 @@ xcodebuild -project boringNotch.xcodeproj -scheme boringNotch -configuration Deb
   -derivedDataPath "$DERIVED" -destination 'platform=macOS,arch=arm64' build -quiet
 
 echo "▸ Assinando com \"$IDENTITY\"…"
-sign() {
-  codesign --force --sign "$IDENTITY" --timestamp=none \
-    --preserve-metadata=identifier,entitlements,flags,runtime "$1" 2>/dev/null \
-    || { echo "✗ Falhou ao assinar $1" >&2; exit 1; }
-}
-# De dentro para fora: primeiro binários soltos, depois bundles (mais fundos antes), por fim o app.
-while IFS= read -r f; do
-  if file -b "$f" | grep -q 'Mach-O'; then sign "$f"; fi
-done < <(find "$BUILT/Contents" -type f -perm -111 | awk -F/ '{print NF, $0}' | sort -rn | cut -d' ' -f2-)
-while IFS= read -r b; do
-  sign "$b"
-done < <(find "$BUILT/Contents" -type d \( -name '*.framework' -o -name '*.app' -o -name '*.xpc' -o -name '*.appex' \) \
-  | awk -F/ '{print NF, $0}' | sort -rn | cut -d' ' -f2-)
-sign "$BUILT"
-codesign --verify --deep --strict "$BUILT"
+source scripts/lib/sign-app.sh
+sign_app_tree "$BUILT" "$IDENTITY"
 
 echo "▸ Instalando em $DEST…"
 osascript -e "tell application id \"$BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
