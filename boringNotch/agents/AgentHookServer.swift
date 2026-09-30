@@ -180,6 +180,12 @@ final class AgentHookServer: @unchecked Sendable {
         let path = socketURL.path
         try? FileManager.default.createDirectory(
             at: socketURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // Outra instância viva (ex.: app de teste do Xcode) já escuta aqui: não tomar o socket
+        // dela — senão, quando ela fecha, ninguém mais escuta. Quem chama tenta de novo depois.
+        if Self.someoneIsListening(at: path) {
+            log.info("socket já em uso por outra instância: \(path)")
+            return
+        }
         unlink(path)
 
         let fd = socket(AF_UNIX, SOCK_STREAM, 0)
@@ -217,6 +223,26 @@ final class AgentHookServer: @unchecked Sendable {
         acceptSource = source
         source.resume()
         log.info("escutando em \(path)")
+    }
+
+    /// `connect` só dá certo se um processo estiver escutando; arquivo órfão dá ECONNREFUSED.
+    private static func someoneIsListening(at path: String) -> Bool {
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+        var address = sockaddr_un()
+        address.sun_family = sa_family_t(AF_UNIX)
+        let pathBytes = Array(path.utf8)
+        guard pathBytes.count < MemoryLayout.size(ofValue: address.sun_path) else { return false }
+        withUnsafeMutableBytes(of: &address.sun_path) { raw in
+            raw.copyBytes(from: pathBytes)
+            raw[pathBytes.count] = 0
+        }
+        return withUnsafePointer(to: &address) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) == 0
+            }
+        }
     }
 
     private func acceptClient() {

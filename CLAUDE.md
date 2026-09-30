@@ -157,6 +157,9 @@ Arquitetura:
 - O script faz `curl --unix-socket agents.sock` → `AgentHookServer` (HTTP mínimo, POSIX socket).
   `PermissionRequest` fica pendurado (timeout 86400) até aprovar/recusar; se o hook morrer
   (respondeu no terminal) o servidor detecta EOF e tira do notch. Fail-open sem o app.
+  Só uma instância escuta: se o socket já responde, a outra não o toma (tenta de novo a cada 5 s,
+  para assumir se a dona fechar). O app hospedeiro dos testes (`XCTestConfigurationFilePath`) não
+  liga o módulo de agentes.
 - `AgentSessionStore` (@MainActor) = reducer de eventos → `AgentSession` (status, atividade, TTY, PID).
   Poda sessões cujo PID morreu. `AgentTerminalFocus` = AppleScript por TTY / abrir pasta no VS Code.
 - **App sem sandbox** (aprovado pelo dono em 2026-09-30): precisa escrever em `~/.claude`, controlar
