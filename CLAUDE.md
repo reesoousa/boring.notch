@@ -119,12 +119,15 @@ fora (`scripts/lib/sign-app.sh`) com a identidade "Apple Development" do chaveir
   `~/Library/Logs/DiagnosticReports/boringCode-*.ips`) e, depois, tirar `/Volumes/boringCode` do
   LaunchServices (o `install-dev.sh` faz isso).
 
+- O DMG **não vai para o git** (`dist/` no `.gitignore`): é publicado como Release do GitHub
+  (`gh release create v<versão> dist/boringCode-<versão>.dmg --repo reesoousa/boringCode`),
+  com o SHA-256 nas notas. v0.1.0 saiu como pré-release (teste com amigos).
+
 Próximos passos:
 1. Opcional: fundo próprio do DMG (660×400, `Configuration/dmg/.background/background.tiff`).
 2. Updates: Sparkle aponta para `https://reesoousa.github.io/boringCode/appcast.xml` (não existe;
    busca automática desligada em `SUEnableAutomaticChecks`). Gerar chave EdDSA própria + Pages.
-3. Publicar como Release no GitHub (`gh release create v0.1.0 dist/boringCode-0.1.0.dmg`).
-4. Se a empresa tiver Developer ID: trocar a identidade e adicionar notarização
+3. Se a empresa tiver Developer ID: trocar a identidade e adicionar notarização
    (`xcrun notarytool` + `stapler`) no `make-dmg.sh`.
 
 ## Módulo de agentes (`boringNotch/agents/`)
