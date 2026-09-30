@@ -50,16 +50,16 @@ struct AgentStatusIndicator: View {
             case .running:
                 ClaudeSpinner(size: size, tint: agent.tint)
             case .waitingApproval:
-                symbol("exclamationmark.circle.fill")
+                symbol("exclamationmark")
                     .scaleEffect(pulse ? 1.0 : 0.82)
                     .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: pulse)
                     .onAppear { pulse = true }
             case .waitingInput:
-                symbol("questionmark.circle.fill")
+                symbol("questionmark")
             case .done:
-                symbol("checkmark.circle.fill")
+                symbol("checkmark")
             case .error:
-                symbol("xmark.circle.fill")
+                symbol("xmark")
             case .idle:
                 Circle()
                     .fill(Color.gray.opacity(0.6))
@@ -72,13 +72,12 @@ struct AgentStatusIndicator: View {
         .accessibilityLabel(Text(status.label))
     }
 
+    /// Só o símbolo, sem círculo atrás — como os outros ícones do app.
     private func symbol(_ name: String) -> some View {
         Image(systemName: name)
-            .resizable()
-            .scaledToFit()
-            .symbolRenderingMode(.hierarchical)
+            .font(.system(size: size * 0.66, weight: .bold))
             .foregroundStyle(status.tint)
-            .frame(width: size * 0.9, height: size * 0.9)
+            .frame(width: size, height: size)
     }
 }
 
