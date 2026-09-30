@@ -631,6 +631,8 @@ struct ContentView: View {
                             )
                         case .agents:
                             AgentsTabView()
+                        case .monitor:
+                            SystemMonitorView()
                         }
                     }
                 }

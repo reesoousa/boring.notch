@@ -22,6 +22,8 @@ enum NotchViews {
     case home
     case shelf
     case agents
+    /// Monitor do sistema (boringCode) — aberto pelo botão do cabeçalho, não pela barra de abas.
+    case monitor
 }
 
 enum DownloadIndicatorStyle: String, Defaults.Serializable {

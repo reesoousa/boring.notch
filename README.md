@@ -89,6 +89,13 @@ Para usar, escolha **LocalSend** em **Ajustes › Shelf › Quick Share Service*
 No iPhone, o LocalSend precisa estar aberto para aparecer e receber. Na primeira vez, o macOS pede permissão de
 **Rede Local** — é o que deixa o boringCode achar os aparelhos.
 
+## Monitor do sistema
+
+CPU, armazenamento, download e upload num relance: o botão ao lado do espelho, no notch aberto, abre quatro cartões
+no visual do Boring Notch, com as barrinhas entrando em sequência. As leituras vêm direto do sistema e **só acontecem
+com o monitor aberto**: fechado, não gasta nada. Ajustes › Monitor do sistema: quais métricas mostrar e o intervalo de
+atualização (1, 2 ou 5 s).
+
 ## Instalação
 
 **Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
@@ -134,6 +141,7 @@ permite focar a aba certa.
 - [x] Codex
 - [x] Instalador `.dmg` assinado (Apple ID pessoal, sem notarização)
 - [x] Ícone próprio
+- [x] Monitor do sistema (CPU, armazenamento, rede)
 - [ ] Atualizações automáticas (Sparkle com appcast próprio)
 - [ ] Notarização (Developer ID)
 

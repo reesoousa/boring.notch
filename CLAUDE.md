@@ -203,3 +203,14 @@ continua o serviço padrão do Shelf (LocalSend se escolhe em Ajustes › Shelf)
   (Models, Identity, Multicast, Server, Receiver, Client + um `main.swift`); o visual do slot sai
   em PNG com `ImageRenderer` num teste (`LocalSendSlotContent` recebe o estado pronto).
 
+## Monitor do sistema (`boringNotch/monitor/`)
+
+- Aba `NotchViews.monitor`, aberta pelo botão do cabeçalho (à esquerda do espelho; os dois aparecem na Home e no
+  Monitor para o botão não mudar de lugar). Não entra na barra de abas.
+- `SystemSampler` (actor): CPU por `host_statistics` (ticks), disco por `volumeAvailableCapacityForImportantUsage`
+  (relê a cada 10 s), rede por `sysctl NET_RT_IFLIST2` (contadores de 64 bits de `en*`/`pdp_ip*`; VPN fica de fora).
+- `SystemMonitor` só mede entre `begin`/`end` (onAppear/onDisappear da aba): fechado, custo zero. Escala das barras de
+  rede = pico recente com decaimento (mínimo 256 KB/s).
+- Visual: cartões de canto 12 (`white 0.06`), barra do player (4 pt, trilho cinza 0.3, branco), barras entram com mola
+  escalonada; respeita Reduzir movimento. Ajustes › Monitor do sistema.
+
