@@ -10,6 +10,7 @@
 
 import Darwin
 import Foundation
+import IOKit.ps
 
 struct SystemSample: Equatable, Sendable {
     /// 0…1. nil na primeira leitura (CPU precisa de duas para ter o intervalo).
@@ -19,6 +20,14 @@ struct SystemSample: Equatable, Sendable {
     /// Bytes por segundo. nil na primeira leitura.
     var download: Double?
     var upload: Double?
+    /// Bytes em uso (como o "Memória usada" do Monitor de Atividade) e total físico.
+    var memoryUsed: Int64?
+    var memoryTotal: Int64 = Int64(ProcessInfo.processInfo.physicalMemory)
+
+    var memoryFraction: Double? {
+        guard let used = memoryUsed, memoryTotal > 0 else { return nil }
+        return min(1, max(0, Double(used) / Double(memoryTotal)))
+    }
 
     var storageUsedFraction: Double? {
         guard let total = storageTotal, let available = storageAvailable, total > 0 else { return nil }
@@ -37,6 +46,7 @@ actor SystemSampler {
     func sample() -> SystemSample {
         var result = SystemSample()
         result.cpu = cpuUsage()
+        result.memoryUsed = memoryUsed()
         (result.download, result.upload) = networkRates()
         if let storage = storage() {
             result.storageTotal = storage.total
@@ -71,6 +81,24 @@ actor SystemSampler {
 
         guard let previous = previousTicks, total > previous.total else { return nil }
         return min(1, max(0, Double(busy &- previous.busy) / Double(total - previous.total)))
+    }
+
+    // MARK: - Memória
+
+    /// Memória de apps + fixa (wired) + comprimida — a mesma conta do Monitor de Atividade.
+    private func memoryUsed() -> Int64? {
+        var stats = vm_statistics64_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.stride / MemoryLayout<integer_t>.stride)
+        let status = withUnsafeMutablePointer(to: &stats) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+            }
+        }
+        guard status == KERN_SUCCESS else { return nil }
+        let pageSize = Int64(vm_kernel_page_size)
+        let appPages = Int64(stats.internal_page_count) - Int64(stats.purgeable_count)
+        let pages = max(0, appPages) + Int64(stats.wire_count) + Int64(stats.compressor_page_count)
+        return pages * pageSize
     }
 
     // MARK: - Rede
@@ -136,3 +164,17 @@ actor SystemSampler {
         return (Int64(total), available)
     }
 }
+
+enum SystemPower {
+    /// Mac com bateria interna (MacBook)? Em Mac de mesa o cartão de bateria some.
+    static let hasInternalBattery: Bool = {
+        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let list = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef]
+        else { return false }
+        return list.contains { source in
+            guard let description = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any] else { return false }
+            return description[kIOPSTypeKey] as? String == kIOPSInternalBatteryType
+        }
+    }()
+}
+

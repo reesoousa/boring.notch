@@ -32262,6 +32262,66 @@
           }
         }
       }
+    },
+    "Memory" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memória"
+          }
+        }
+      }
+    },
+    "%@ of %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de %2$@"
+          }
+        }
+      }
+    },
+    "Full in %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cheia em %@"
+          }
+        }
+      }
+    },
+    "Plugged in" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na tomada"
+          }
+        }
+      }
+    },
+    "%@ left" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ restantes"
+          }
+        }
+      }
+    },
+    "On battery" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na bateria"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

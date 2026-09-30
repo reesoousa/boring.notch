@@ -91,8 +91,9 @@ No iPhone, o LocalSend precisa estar aberto para aparecer e receber. Na primeira
 
 ## Monitor do sistema
 
-CPU, armazenamento, download e upload num relance: o botão ao lado do espelho, no notch aberto, abre quatro cartões
-no visual do Boring Notch, com as barrinhas entrando em sequência. As leituras vêm direto do sistema e **só acontecem
+CPU, memória, armazenamento, bateria, download e upload num relance: o botão ao lado do espelho, no notch aberto,
+abre seis cartões no visual do Boring Notch — eles chegam em cascata, as barrinhas crescem e os números contam até o
+valor atual. As leituras vêm direto do sistema e **só acontecem
 com o monitor aberto**: fechado, não gasta nada. Ajustes › Monitor do sistema: quais métricas mostrar e o intervalo de
 atualização (1, 2 ou 5 s).
 
@@ -141,7 +142,7 @@ permite focar a aba certa.
 - [x] Codex
 - [x] Instalador `.dmg` assinado (Apple ID pessoal, sem notarização)
 - [x] Ícone próprio
-- [x] Monitor do sistema (CPU, armazenamento, rede)
+- [x] Monitor do sistema (CPU, memória, armazenamento, bateria, rede)
 - [ ] Atualizações automáticas (Sparkle com appcast próprio)
 - [ ] Notarização (Developer ID)
 

@@ -207,10 +207,12 @@ continua o serviço padrão do Shelf (LocalSend se escolhe em Ajustes › Shelf)
 
 - Aba `NotchViews.monitor`, aberta pelo botão do cabeçalho (à esquerda do espelho; os dois aparecem na Home e no
   Monitor para o botão não mudar de lugar). Não entra na barra de abas.
-- `SystemSampler` (actor): CPU por `host_statistics` (ticks), disco por `volumeAvailableCapacityForImportantUsage`
+- `SystemSampler` (actor): CPU por `host_statistics` (ticks), memória por `host_statistics64` (apps + wired +
+  comprimida, como o Monitor de Atividade), bateria reaproveita `BatteryStatusViewModel` (some sem bateria interna), disco por `volumeAvailableCapacityForImportantUsage`
   (relê a cada 10 s), rede por `sysctl NET_RT_IFLIST2` (contadores de 64 bits de `en*`/`pdp_ip*`; VPN fica de fora).
 - `SystemMonitor` só mede entre `begin`/`end` (onAppear/onDisappear da aba): fechado, custo zero. Escala das barras de
   rede = pico recente com decaimento (mínimo 256 KB/s).
-- Visual: cartões de canto 12 (`white 0.06`), barra do player (4 pt, trilho cinza 0.3, branco), barras entram com mola
-  escalonada; respeita Reduzir movimento. Ajustes › Monitor do sistema.
+- Visual: grade 3×2 (4 métricas → 2×2), cartões de canto 12 (`white 0.06`), número 17 pt + unidade 11 pt cinza, barra do
+  player (4 pt, trilho cinza 0.3, branco). Entrada em cascata diagonal (desfoque → nítido, mola) e `CountingText`
+  (Animatable) conta do zero junto com a barra; respeita Reduzir movimento. Ajustes › Monitor do sistema.
 

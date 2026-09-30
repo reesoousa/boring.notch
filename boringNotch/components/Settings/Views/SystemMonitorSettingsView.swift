@@ -26,7 +26,11 @@ struct SystemMonitorSettingsView: View {
 
             Section {
                 Defaults.Toggle(key: .monitorShowCPU) { Text("CPU") }
+                Defaults.Toggle(key: .monitorShowMemory) { Text("Memory") }
                 Defaults.Toggle(key: .monitorShowStorage) { Text("Storage") }
+                if SystemPower.hasInternalBattery {
+                    Defaults.Toggle(key: .monitorShowBattery) { Text("Battery") }
+                }
                 Defaults.Toggle(key: .monitorShowDownload) { Text("Download") }
                 Defaults.Toggle(key: .monitorShowUpload) { Text("Upload") }
             } header: {

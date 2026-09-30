@@ -78,19 +78,71 @@ final class SystemMonitor: ObservableObject {
 
     // MARK: - Texto
 
-    static func rate(_ bytesPerSecond: Double?) -> String {
-        guard let bytesPerSecond else { return "—" }
+    // Formatadores reaproveitados: os números contam quadro a quadro na entrada.
+    private static let rateFormatter: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.includesActualByteCount = false
-        formatter.zeroPadsFractionDigits = false
         formatter.allowsNonnumericFormatting = false  // "0 KB", nunca "Zero KB"
-        return formatter.string(fromByteCount: Int64(bytesPerSecond)) + "/s"
+        return formatter
+    }()
+
+    private static let memoryFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .memory
+        formatter.allowedUnits = [.useGB, .useMB]
+        return formatter
+    }()
+
+    private static let durationFormatter: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        return formatter
+    }()
+
+    static func rate(_ bytesPerSecond: Double?) -> String {
+        guard let bytesPerSecond else { return "—" }
+        return rateFormatter.string(fromByteCount: Int64(max(0, bytesPerSecond))) + "/s"
+    }
+
+    private static let rateNumberFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.allowsNonnumericFormatting = false
+        formatter.includesUnit = false
+        return formatter
+    }()
+
+    private static let rateUnitFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.includesCount = false
+        return formatter
+    }()
+
+    /// "23,9" + "MB/s" (número e unidade separados, para a unidade ficar menor).
+    static func rateParts(_ bytesPerSecond: Double) -> (number: String, unit: String) {
+        let bytes = Int64(max(0, bytesPerSecond))
+        return (rateNumberFormatter.string(fromByteCount: bytes), rateUnitFormatter.string(fromByteCount: bytes) + "/s")
     }
 
     static func bytes(_ value: Int64?) -> String {
         guard let value else { return "—" }
         return ByteCountFormatter.string(fromByteCount: value, countStyle: .file)
+    }
+
+    static func memory(_ value: Int64?) -> String {
+        guard let value else { return "—" }
+        return memoryFormatter.string(fromByteCount: value)
+    }
+
+    /// "1h 20min" (minutos do IOKit).
+    static func duration(minutes: Int) -> String {
+        durationFormatter.string(from: TimeInterval(minutes * 60)) ?? "\(minutes) min"
     }
 }

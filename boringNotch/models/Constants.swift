@@ -510,7 +510,9 @@ extension Defaults.Keys {
     // MARK: System monitor (boringCode)
     static let monitorEnabled = Key<Bool>("monitorEnabled", default: true)
     static let monitorShowCPU = Key<Bool>("monitorShowCPU", default: true)
+    static let monitorShowMemory = Key<Bool>("monitorShowMemory", default: true)
     static let monitorShowStorage = Key<Bool>("monitorShowStorage", default: true)
+    static let monitorShowBattery = Key<Bool>("monitorShowBattery", default: true)
     static let monitorShowDownload = Key<Bool>("monitorShowDownload", default: true)
     static let monitorShowUpload = Key<Bool>("monitorShowUpload", default: true)
     /// Segundos entre leituras (só enquanto a aba está aberta).
