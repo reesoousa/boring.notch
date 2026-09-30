@@ -52,7 +52,7 @@ final class LocalSendService: ObservableObject {
     private let queue = DispatchQueue(label: "com.reesoousa.boringcode.localsend")
     private lazy var server = LocalSendServer(queue: queue)
     private lazy var multicast = LocalSendMulticast(queue: queue)
-    private let receiver = LocalSendReceiver()
+    private let receiver: LocalSendReceiver
     private var identity: LocalSendIdentity?
     private var client: LocalSendClient?
     /// Cópia do "quem sou eu" lida pela fila de rede.
@@ -66,7 +66,9 @@ final class LocalSendService: ObservableObject {
     private var starting = false
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "boringcode", category: "LocalSend")
 
-    private init() {}
+    private init() {
+        receiver = LocalSendReceiver(queue: queue)
+    }
 
     // MARK: - Ciclo de vida
 
@@ -81,7 +83,7 @@ final class LocalSendService: ObservableObject {
             .store(in: &cancellables)
         Defaults.publisher(.localSendAlias)
             .dropFirst()
-            .receive(on: DispatchQueue.main)
+            .debounce(for: .seconds(1), scheduler: DispatchQueue.main)  // não anuncia a cada tecla
             .sink { [weak self] _ in
                 self?.updateOwnInfo()
                 self?.announce()
@@ -127,6 +129,7 @@ final class LocalSendService: ObservableObject {
             Task { @MainActor in self?.handleAnnouncement(info, host: host) }
         }
 
+        receiver.removeLeftoverPartials()
         server.start(identity: identity)
         multicast.start()
         watchNetwork()
@@ -136,6 +139,8 @@ final class LocalSendService: ObservableObject {
     private func stopNetworking() {
         guard isRunning else { return }
         cancelSend()
+        clearPending()
+        incoming = nil
         server.stop()
         multicast.stop()
         pathMonitor?.cancel()
@@ -212,7 +217,7 @@ final class LocalSendService: ObservableObject {
     }
 
     private func handleAnnouncement(_ info: LocalSendInfo, host: String) {
-        guard let client, info.fingerprint.uppercased() != identity?.fingerprint, !isThisMac(host) else { return }
+        guard isRunning, let client, info.fingerprint.uppercased() != identity?.fingerprint, !isThisMac(host) else { return }
         let https = info.protocol?.lowercased() != "http"
         let port = info.port ?? LocalSendProtocol.port
         if info.announce == false {
@@ -270,7 +275,7 @@ final class LocalSendService: ObservableObject {
     }
 
     private func upsert(_ device: LocalSendDevice) {
-        guard device.fingerprint != identity?.fingerprint, !device.fingerprint.isEmpty,
+        guard isRunning, device.fingerprint != identity?.fingerprint, !device.fingerprint.isEmpty,
               !isThisMac(device.host)
         else { return }
         var updated = devices
@@ -297,7 +302,12 @@ final class LocalSendService: ObservableObject {
         var count: Int { urls.count + texts.count }
     }
 
-    @Published private(set) var pending: Pending?
+    @Published private(set) var pending: Pending? {
+        didSet { holdNotchOpen(pending != nil) }
+    }
+    /// Segura o notch aberto enquanto há itens esperando você escolher o aparelho
+    /// (mesmo mecanismo do menu de compartilhar do Shelf).
+    private var holdingNotch = false
     /// Lendo o que foi solto — o slot continua aberto enquanto isso (sem piscar).
     @Published private(set) var isPreparingPending = false
 
@@ -312,8 +322,24 @@ final class LocalSendService: ObservableObject {
 
     func arm(urls: [URL], texts: [String]) {
         guard !urls.isEmpty || !texts.isEmpty else { return }
-        withAnimation(.smooth(duration: 0.3)) { pending = Pending(urls: urls, texts: texts) }
+        let armed = Pending(urls: urls, texts: texts)
+        withAnimation(.smooth(duration: 0.3)) { pending = armed }
         refresh()
+        // Esquecido aberto: desiste sozinho.
+        Task {
+            try? await Task.sleep(for: .seconds(45))
+            if pending?.id == armed.id { clearPending() }
+        }
+    }
+
+    private func holdNotchOpen(_ hold: Bool) {
+        guard hold != holdingNotch else { return }
+        holdingNotch = hold
+        if hold {
+            SharingStateManager.shared.beginInteraction()
+        } else {
+            SharingStateManager.shared.endInteraction()
+        }
     }
 
     func sendPending(to device: LocalSendDevice) {
@@ -402,12 +428,21 @@ final class LocalSendService: ObservableObject {
     }
 
     private func setPhase(_ phase: SendPhase) {
-        guard outgoing != nil else { return }
-        if case .sending = phase, case .sending = outgoing?.phase {
-            outgoing?.phase = phase  // progresso: sem animar cada passo
-        } else {
-            withAnimation(.smooth(duration: 0.3)) { outgoing?.phase = phase }
+        guard let current = outgoing?.phase else { return }
+        if case .sending(let new) = phase {
+            switch current {
+            case .done, .failed:
+                return  // progresso atrasado depois do fim
+            case .sending(let old):
+                // Só publica a cada 1% (evita redesenhar o notch dezenas de vezes por segundo).
+                guard Int(new * 100) != Int(old * 100) else { return }
+                outgoing?.phase = phase
+                return
+            case .waiting:
+                break
+            }
         }
+        withAnimation(.smooth(duration: 0.3)) { outgoing?.phase = phase }
     }
 
     /// Mostra ✓ ou o erro por um instante e volta ao normal.
@@ -426,7 +461,8 @@ final class LocalSendService: ObservableObject {
         var urls: [URL] = []
         var texts: [String] = []
         for provider in providers {
-            if let webURL = await provider.extractURL() {
+            // Arquivo do Finder também "é" URL (file://): só link de verdade vira texto.
+            if let webURL = await provider.extractURL(), !webURL.isFileURL {
                 texts.append(webURL.absoluteString)
             } else if let fileURL = await provider.extractItem() {
                 urls.append(fileURL)
@@ -458,9 +494,9 @@ final class LocalSendService: ObservableObject {
         case .text(let text, let sender):
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             if let url = URL(string: trimmed), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) {
-                ShelfStateViewModel.shared.add([ShelfItem(kind: .link(url: url))])
+                addToShelf([ShelfItem(kind: .link(url: url))])
             } else {
-                ShelfStateViewModel.shared.add([ShelfItem(kind: .text(string: text))])
+                addToShelf([ShelfItem(kind: .text(string: text))])
             }
             let id = UUID().uuidString
             withAnimation(.smooth(duration: 0.3)) {
@@ -470,12 +506,22 @@ final class LocalSendService: ObservableObject {
         }
     }
 
+    /// Entra no Shelf já selecionado: é só arrastar para usar.
     private func addToShelf(_ urls: [URL]) {
         let items = urls.compactMap { url -> ShelfItem? in
             guard let bookmark = try? Bookmark(url: url) else { return nil }
             return ShelfItem(kind: .file(bookmark: bookmark.data))
         }
-        ShelfStateViewModel.shared.add(items)
+        addToShelf(items)
+    }
+
+    private func addToShelf(_ items: [ShelfItem]) {
+        guard !items.isEmpty else { return }
+        let shelf = ShelfStateViewModel.shared
+        shelf.add(items)
+        // `add` ignora duplicados; seleciona o que de fato está no Shelf.
+        let keys = Set(items.map(\.identityKey))
+        ShelfSelectionModel.shared.select(shelf.items.filter { keys.contains($0.identityKey) })
     }
 
     private func finishIncoming(id: String, failed: Bool) {

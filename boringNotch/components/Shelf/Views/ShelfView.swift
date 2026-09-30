@@ -25,8 +25,8 @@ struct ShelfView: View {
 
         ShelfQuickLookHost { quickLookService in
             HStack(spacing: 12) {
+                // Quadrado (o slot do LocalSend alarga sozinho enquanto mostra aparelhos).
                 FileShareView(dropInteraction: dropInteraction)
-                    .aspectRatio(1, contentMode: .fit)
                 panel(quickLookService: quickLookService)
                     .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $interaction.dragDetectorTargeting) { providers in
                         handleDrop(providers: providers)

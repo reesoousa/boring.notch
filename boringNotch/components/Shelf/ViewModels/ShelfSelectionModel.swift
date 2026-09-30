@@ -73,6 +73,12 @@ final class ShelfSelectionModel: ObservableObject {
         updateSelection(to: Set(rangeIDs))
     }
 
+    /// Seleciona exatamente estes itens (boringCode: o que acabou de chegar pelo LocalSend).
+    func select(_ items: [ShelfItem]) {
+        updateSelection(to: Set(items.map(\.id)))
+        lastAnchorID = items.last?.id
+    }
+
     func clear() {
         updateSelection(to: [])
         lastAnchorID = nil

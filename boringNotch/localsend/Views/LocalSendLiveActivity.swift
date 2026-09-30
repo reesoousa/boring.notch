@@ -65,3 +65,52 @@ private struct LocalSendProgressRing: View {
         .animation(.smooth(duration: 0.3), value: transfer.finished)
     }
 }
+
+/// Notch aberto: cápsula no cabeçalho, no formato do OSD aberto (volume/brilho) —
+/// "Recebendo de…" com progresso, depois "Recebido de…" com ✓.
+struct LocalSendHeaderPill: View {
+    let transfer: LocalSendService.Incoming
+
+    private var verb: String {
+        if transfer.failed { return String(localized: "Couldn't receive from") }
+        if transfer.finished { return String(localized: "Received from") }
+        return String(localized: "Receiving from")
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: transfer.symbolName)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .frame(width: 20, alignment: .center)
+
+            // Duas linhas, como título + subtítulo das linhas dos agentes: cabe o nome inteiro.
+            VStack(alignment: .leading, spacing: 0) {
+                Text(verb)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.gray)
+                    .contentTransition(.opacity)
+                Text(verbatim: transfer.senderAlias)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .truncationMode(.tail)
+            }
+            .lineLimit(1)
+
+            LocalSendProgressRing(transfer: transfer, size: 20)
+                .frame(width: 16, height: 16)
+                .padding(.leading, 2)
+        }
+        .padding(.leading, 10)
+        .padding(.trailing, 12)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.black)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+        .animation(.smooth(duration: 0.3), value: transfer.finished)
+        .accessibilityElement()
+        .accessibilityLabel(Text(verbatim: "\(verb) \(transfer.senderAlias)"))
+    }
+}

@@ -6,12 +6,17 @@
 //  (decisão do dono: sem perguntar), salvando em Downloads. Mesma sequência do
 //  protocolo v2: prepare-upload → upload (um por arquivo) → pronto.
 //
+//  Como aceita de qualquer aparelho da rede: arquivos entram em quarentena
+//  (o Gatekeeper confere antes de abrir), o tamanho declarado é respeitado,
+//  o espaço em disco é conferido e sessão parada expira sozinha.
+//
 
+import CoreServices
 import CryptoKit
 import Foundation
 import os
 
-final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na fila do servidor
+final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado em `queue`
     enum Event: Sendable {
         case started(id: String, sender: LocalSendDevice, fileCount: Int, totalBytes: Int64)
         case progress(id: String, fraction: Double)
@@ -22,20 +27,27 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
         case register(LocalSendDevice)
     }
 
+    /// Fila do servidor (onde tudo aqui roda).
+    let queue: DispatchQueue
     /// Dados deste Mac para register/info (lidos na fila do servidor).
     var ownInfo: (() -> LocalSendInfo)?
     /// Receber está ligado?
     var isAccepting: (() -> Bool)?
-    var destination: () -> URL = {
+    var destination: () -> URL = { LocalSendReceiver.downloadsFolder }
+    var onEvent: ((Event) -> Void)?
+
+    static var downloadsFolder: URL {
         FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
     }
-    var onEvent: ((Event) -> Void)?
+
+    static let partialSuffix = ".boringcode-part"
 
     private struct IncomingFile {
         let dto: LocalSendFileDTO
         let token: String
         var done = false
+        var inProgress = false
     }
 
     private final class Session {
@@ -47,9 +59,10 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
         var receivedBytes: Int64 = 0
         var lastActivity = Date()
         var lastProgressEvent = Date.distantPast
-        /// Nome original de primeiro nível → URL única em Downloads.
-        var topLevel: [String: URL] = [:]
-        var topLevelOrder: [URL] = []
+        /// Pastas de primeiro nível (envio de pasta) → URL única em Downloads.
+        var folders: [String: URL] = [:]
+        /// O que vai para o Shelf, na ordem em que ficou pronto.
+        var items: [URL] = []
 
         init(id: String, sender: LocalSendDevice, senderHost: String, files: [String: IncomingFile]) {
             self.id = id
@@ -63,8 +76,12 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
     private var session: Session?
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "boringcode", category: "LocalSend")
 
-    /// Sem atividade por esse tempo, a sessão é considerada abandonada.
-    private static let sessionTimeout: TimeInterval = 60
+    /// Sem atividade por esse tempo, a sessão é abandonada (o celular saiu, bloqueou a tela…).
+    private static let sessionTimeout: TimeInterval = 30
+
+    init(queue: DispatchQueue) {
+        self.queue = queue
+    }
 
     func route(_ request: LocalSendServer.Request) -> LocalSendServer.BodyPlan {
         let api = LocalSendProtocol.apiPrefix
@@ -81,6 +98,17 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
             return .collect(limit: 1024) { [weak self] _ in self?.cancel(request) ?? .message(500, "") }
         default:
             return .reject(.message(404, "Not found"))
+        }
+    }
+
+    /// Apaga `.part` que ficaram de um recebimento interrompido (app fechado no meio).
+    func removeLeftoverPartials() {
+        queue.async {
+            let folder = self.destination()
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+            for name in names where name.hasPrefix(".") && name.hasSuffix(Self.partialSuffix) {
+                try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
+            }
         }
     }
 
@@ -113,7 +141,8 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
     private func prepareUpload(_ body: Data, request: LocalSendServer.Request) -> LocalSendServer.Response {
         guard isAccepting?() ?? false else { return .message(403, "Rejected") }
         guard let payload = try? JSONDecoder().decode(LocalSendPrepareUploadRequest.self, from: body),
-              !payload.files.isEmpty
+              !payload.files.isEmpty,
+              payload.files.values.allSatisfy({ $0.size >= 0 })
         else { return .message(400, "Invalid body") }
 
         if let current = session {
@@ -143,8 +172,12 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
             (key, IncomingFile(dto: dto, token: UUID().uuidString))
         })
         let newSession = Session(id: UUID().uuidString, sender: sender, senderHost: request.remoteHost, files: incoming)
+        if let available = availableSpace(), newSession.totalBytes > available {
+            return .message(507, "Not enough space")
+        }
         session = newSession
         onEvent?(.started(id: newSession.id, sender: sender, fileCount: incoming.count, totalBytes: newSession.totalBytes))
+        watch(newSession)
 
         return .json(LocalSendPrepareUploadResponse(
             sessionId: newSession.id,
@@ -160,26 +193,33 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
               !file.done
         else { return .reject(.message(403, "Invalid token")) }
         guard request.remoteHost == session.senderHost else { return .reject(.message(403, "Invalid IP")) }
+        guard !file.inProgress else { return .reject(.message(409, "Upload already in progress")) }
 
         session.lastActivity = Date()
         guard let target = targetURL(for: file.dto.fileName, in: session) else {
             return .reject(.message(500, "Could not create file"))
         }
         do {
-            let sink = try FileSink(target: target, expectedSHA256: file.dto.sha256, modified: file.dto.metadata?.modified) { [weak self] written in
-                self?.progress(session, added: written)
-            } completion: { [weak self] success in
-                self?.fileFinished(fileID, success: success, in: session)
-            }
+            let sink = try FileSink(
+                target: target,
+                expectedSize: file.dto.size,
+                expectedSHA256: file.dto.sha256,
+                modified: file.dto.metadata?.modified,
+                onWrite: { [weak self] written in self?.progress(session, added: written) },
+                completion: { [weak self] savedURL in self?.fileFinished(fileID, savedURL: savedURL, in: session) }
+            )
+            session.files[fileID]?.inProgress = true
             return .stream(sink)
         } catch {
-            log.error("LocalSend: não deu para criar \(target.path): \(error.localizedDescription)")
+            log.error("LocalSend: não deu para criar \(target.path, privacy: .private): \(error.localizedDescription)")
             return .reject(.message(500, "Could not create file"))
         }
     }
 
     private func cancel(_ request: LocalSendServer.Request) -> LocalSendServer.Response {
-        if let session, session.id == request.query["sessionId"] || request.query["sessionId"] == nil {
+        // Só quem está mandando pode cancelar.
+        if let session, request.remoteHost == session.senderHost,
+           request.query["sessionId"] == nil || request.query["sessionId"] == session.id {
             abandon(session)
         }
         return LocalSendServer.Response(status: 200)
@@ -195,13 +235,18 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
         onEvent?(.progress(id: session.id, fraction: min(1, Double(session.receivedBytes) / Double(session.totalBytes))))
     }
 
-    private func fileFinished(_ fileID: String, success: Bool, in session: Session) {
-        guard success else { return }  // o remetente pode tentar de novo
-        session.files[fileID]?.done = true
+    /// `savedURL` nil = falhou (o remetente pode tentar de novo; se parar, a sessão expira).
+    private func fileFinished(_ fileID: String, savedURL: URL?, in session: Session) {
+        session.files[fileID]?.inProgress = false
         session.lastActivity = Date()
+        guard let savedURL else { return }
+        session.files[fileID]?.done = true
+        if savedURL.deletingLastPathComponent().standardizedFileURL == destination().standardizedFileURL {
+            session.items.append(savedURL)  // arquivo solto (os de pasta entram pela pasta)
+        }
         guard session.files.values.allSatisfy(\.done) else { return }
         if self.session === session { self.session = nil }
-        onEvent?(.finished(id: session.id, items: session.topLevelOrder))
+        onEvent?(.finished(id: session.id, items: session.items))
     }
 
     private func abandon(_ session: Session) {
@@ -210,22 +255,41 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
         onEvent?(.failed(id: session.id))
     }
 
+    /// Vigia a sessão: parada por mais que o limite, é abandonada.
+    private func watch(_ session: Session) {
+        queue.asyncAfter(deadline: .now() + 5) { [weak self, weak session] in
+            guard let self, let session, self.session === session else { return }
+            let transferring = session.files.values.contains(where: \.inProgress)
+            if !transferring, Date().timeIntervalSince(session.lastActivity) > Self.sessionTimeout {
+                self.abandon(session)
+            } else {
+                self.watch(session)
+            }
+        }
+    }
+
+    private func availableSpace() -> Int64? {
+        let values = try? destination().resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage
+    }
+
     /// Caminho seguro dentro de Downloads, preservando subpastas de um envio de pasta.
     private func targetURL(for fileName: String, in session: Session) -> URL? {
         let parts = fileName
             .split(whereSeparator: { $0 == "/" || $0 == "\\" })
-            .map { String($0).trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && $0 != "." && $0 != ".." }
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .map { $0.replacingOccurrences(of: ":", with: "-") }
+            .filter { !$0.isEmpty && $0 != "." && $0 != ".." }
         guard let first = parts.first else { return nil }
+        guard parts.count > 1 else { return destination().appendingPathComponent(first) }
 
         let root: URL
-        if let existing = session.topLevel[first] {
+        if let existing = session.folders[first] {
             root = existing
         } else {
             root = Self.uniqueURL(destination().appendingPathComponent(first))
-            session.topLevel[first] = root
-            session.topLevelOrder.append(root)
+            session.folders[first] = root
+            session.items.append(root)
         }
         let target = parts.dropFirst().reduce(root) { $0.appendingPathComponent($1) }
         try? FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -248,23 +312,31 @@ final class LocalSendReceiver: @unchecked Sendable {  // estado só é tocado na
     }
 }
 
-/// Escreve o upload num `.part` e só move para o nome final quando terminar certo.
+/// Escreve o upload num `.part` oculto e só move para o nome final quando terminar certo.
 private final class FileSink: LocalSendServer.Sink {
+    enum SinkError: Error { case tooLarge }
+
     private let target: URL
     private let partial: URL
     private let handle: FileHandle
+    private let expectedSize: Int64
+    private var written: Int64 = 0
     private let expectedSHA256: String?
     private var hasher = SHA256()
     private let modified: String?
     private let onWrite: (Int) -> Void
-    private let completion: (Bool) -> Void
+    private let completion: (URL?) -> Void
     private var closed = false
 
-    init(target: URL, expectedSHA256: String?, modified: String?, onWrite: @escaping (Int) -> Void, completion: @escaping (Bool) -> Void) throws {
+    init(target: URL, expectedSize: Int64, expectedSHA256: String?, modified: String?,
+         onWrite: @escaping (Int) -> Void, completion: @escaping (URL?) -> Void) throws {
         self.target = target
-        partial = target.deletingLastPathComponent().appendingPathComponent(".\(target.lastPathComponent).boringcode-part")
+        let token = UUID().uuidString.prefix(8)
+        partial = target.deletingLastPathComponent()
+            .appendingPathComponent(".\(target.lastPathComponent).\(token)\(LocalSendReceiver.partialSuffix)")
         FileManager.default.createFile(atPath: partial.path, contents: nil)
         handle = try FileHandle(forWritingTo: partial)
+        self.expectedSize = expectedSize
         self.expectedSHA256 = expectedSHA256?.lowercased()
         self.modified = modified
         self.onWrite = onWrite
@@ -272,7 +344,10 @@ private final class FileSink: LocalSendServer.Sink {
     }
 
     func write(_ data: Data) throws {
+        // Não aceita mais que o tamanho declarado no prepare-upload.
+        guard written + Int64(data.count) <= expectedSize else { throw SinkError.tooLarge }
         try handle.write(contentsOf: data)
+        written += Int64(data.count)
         if expectedSHA256 != nil { hasher.update(data: data) }
         onWrite(data.count)
     }
@@ -282,34 +357,33 @@ private final class FileSink: LocalSendServer.Sink {
         closed = true
         try? handle.close()
 
+        guard written == expectedSize else {
+            try? FileManager.default.removeItem(at: partial)
+            completion(nil)
+            return .message(400, "Size mismatch")
+        }
         if let expectedSHA256 {
             let actual = hasher.finalize().map { String(format: "%02x", $0) }.joined()
             guard actual == expectedSHA256 else {
                 try? FileManager.default.removeItem(at: partial)
-                completion(false)
+                completion(nil)
                 return .message(422, "Checksum mismatch")
             }
         }
         do {
-            let final = LocalSendReceiver.uniqueURL(target)
+            var final = LocalSendReceiver.uniqueURL(target)
             try FileManager.default.moveItem(at: partial, to: final)
+            Self.quarantine(&final)
             if let modified, let date = Self.parseDate(modified) {
                 try? FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: final.path)
             }
-            completion(true)
+            completion(final)
             return LocalSendServer.Response(status: 200)
         } catch {
             try? FileManager.default.removeItem(at: partial)
-            completion(false)
+            completion(nil)
             return .message(500, "Could not save file")
         }
-    }
-
-    private static func parseDate(_ text: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        if let date = formatter.date(from: text) { return date }
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: text)
     }
 
     func abort() {
@@ -317,6 +391,23 @@ private final class FileSink: LocalSendServer.Sink {
         closed = true
         try? handle.close()
         try? FileManager.default.removeItem(at: partial)
-        completion(false)
+        completion(nil)
+    }
+
+    /// Como um download do navegador: o macOS confere (e avisa) antes de abrir algo executável.
+    private static func quarantine(_ url: inout URL) {
+        var values = URLResourceValues()
+        values.quarantineProperties = [
+            kLSQuarantineAgentNameKey as String: "boringCode",
+            kLSQuarantineTypeKey as String: kLSQuarantineTypeOtherDownload as String,
+        ]
+        try? url.setResourceValues(values)
+    }
+
+    private static func parseDate(_ text: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        if let date = formatter.date(from: text) { return date }
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: text)
     }
 }

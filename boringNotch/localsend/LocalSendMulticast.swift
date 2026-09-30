@@ -19,6 +19,7 @@ final class LocalSendMulticast: @unchecked Sendable {  // estado só é tocado e
     private var fd: Int32 = -1
     private var readSource: DispatchSourceRead?
     private var joinedInterfaces: Set<String> = []
+    private var stopped = true
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "boringcode", category: "LocalSend")
 
     init(queue: DispatchQueue) {
@@ -26,11 +27,17 @@ final class LocalSendMulticast: @unchecked Sendable {  // estado só é tocado e
     }
 
     func start() {
-        queue.async { self.open() }
+        queue.async {
+            self.stopped = false
+            self.open()
+        }
     }
 
     func stop() {
-        queue.async { self.closeSocket() }
+        queue.async {
+            self.stopped = true
+            self.closeSocket()
+        }
     }
 
     /// Manda o anúncio em rajada (100 ms, 500 ms, 2 s), como o LocalSend faz —
@@ -47,6 +54,7 @@ final class LocalSendMulticast: @unchecked Sendable {  // estado só é tocado e
     // MARK: - Socket
 
     private func open() {
+        guard !stopped else { return }
         guard fd < 0 else {
             joinInterfaces()
             return
@@ -110,6 +118,7 @@ final class LocalSendMulticast: @unchecked Sendable {  // estado só é tocado e
     }
 
     private func send(_ payload: Data) {
+        guard !stopped else { return }  // anúncio agendado antes de desligar
         if fd < 0 { open() }
         guard fd >= 0 else { return }
         joinInterfaces()
@@ -156,7 +165,8 @@ enum LocalSendNetwork {
         let netmask: String
     }
 
-    /// Interfaces IPv4 ativas com multicast, sem loopback nem VPN ponto a ponto.
+    /// Interfaces IPv4 de verdade (Wi-Fi/Ethernet: `en*`) com multicast — sem loopback,
+    /// VPN, AWDL nem pontes de máquina virtual.
     static func ipv4Interfaces() -> [Interface] {
         var list: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&list) == 0, let first = list else { return [] }
@@ -169,6 +179,7 @@ enum LocalSendNetwork {
             guard let address = entry.ifa_addr, address.pointee.sa_family == sa_family_t(AF_INET),
                   flags & IFF_UP != 0, flags & IFF_RUNNING != 0, flags & IFF_LOOPBACK == 0,
                   flags & IFF_MULTICAST != 0, flags & IFF_POINTOPOINT == 0,
+                  String(cString: entry.ifa_name).hasPrefix("en"),
                   let netmask = entry.ifa_netmask
             else { continue }
             result.append(Interface(name: String(cString: entry.ifa_name), address: ipString(address), netmask: ipString(netmask)))

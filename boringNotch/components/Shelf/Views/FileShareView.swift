@@ -38,6 +38,7 @@ struct FileShareView: View {
             .background(NSViewHost(view: $hostView))
         } else {
             standardSlot
+                .aspectRatio(1, contentMode: .fit)
         }
     }
 

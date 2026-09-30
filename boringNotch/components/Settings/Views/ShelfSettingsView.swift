@@ -114,6 +114,7 @@ struct ShelfSettingsView: View {
 private struct LocalSendSettingsSection: View {
     @Default(.localSendEnabled) private var localSendEnabled
     @Default(.localSendAlias) private var localSendAlias
+    @Default(.localSendReceive) private var localSendReceive
     @ObservedObject private var service = LocalSendService.shared
 
     private var computerName: String { Host.current().localizedName ?? "boringCode" }
@@ -127,6 +128,10 @@ private struct LocalSendSettingsSection: View {
                 Text("Receive files automatically")
             }
             .disabled(!localSendEnabled)
+            Defaults.Toggle(key: .localSendOpenOnReceive) {
+                Text("Open the notch when a file arrives")
+            }
+            .disabled(!localSendEnabled || !localSendReceive)
             TextField("Device name", text: $localSendAlias, prompt: Text(computerName))
                 .disabled(!localSendEnabled)
             if localSendEnabled {

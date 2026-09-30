@@ -31982,6 +31982,66 @@
           }
         }
       }
+    },
+    "more" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mais"
+          }
+        }
+      }
+    },
+    "Timed out" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo esgotado"
+          }
+        }
+      }
+    },
+    "Open the notch when a file arrives" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir o notch quando chegar um arquivo"
+          }
+        }
+      }
+    },
+    "Received from" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recebido de"
+          }
+        }
+      }
+    },
+    "Receiving from" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recebendo de"
+          }
+        }
+      }
+    },
+    "Couldn't receive from" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não deu para receber de"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

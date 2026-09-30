@@ -15,6 +15,7 @@ enum LocalSendError: LocalizedError {
     case busy
     case pinRequired
     case unreachable
+    case timedOut
     case status(Int)
 
     var errorDescription: String? {
@@ -23,6 +24,7 @@ enum LocalSendError: LocalizedError {
         case .busy: String(localized: "Busy")
         case .pinRequired: String(localized: "Needs a PIN")
         case .unreachable: String(localized: "Couldn't connect")
+        case .timedOut: String(localized: "Timed out")
         case .status: String(localized: "Failed")
         }
     }
@@ -89,7 +91,7 @@ final class LocalSendClient: Sendable {
                 (_, response) = try await session.upload(for: request, from: data ?? Data(), delegate: delegate)
             }
         } catch {
-            throw LocalSendError.unreachable
+            throw Self.map(error)
         }
         try Self.check((response as? HTTPURLResponse)?.statusCode ?? 0)
     }
@@ -118,11 +120,18 @@ final class LocalSendClient: Sendable {
         do {
             (data, response) = try await session.data(for: request, delegate: delegate)
         } catch {
-            throw LocalSendError.unreachable
+            throw Self.map(error)
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         try Self.check(status)
         return (data, status)
+    }
+
+    /// Cancelado continua cancelamento; tempo esgotado ≠ aparelho fora do ar.
+    private static func map(_ error: Error) -> Error {
+        if Task.isCancelled { return CancellationError() }
+        // `.cancelled` sem a Task cancelada = TLS recusado (fingerprint diferente): trata como fora do ar.
+        return (error as? URLError)?.code == .timedOut ? LocalSendError.timedOut : LocalSendError.unreachable
     }
 
     private static func check(_ status: Int) throws {

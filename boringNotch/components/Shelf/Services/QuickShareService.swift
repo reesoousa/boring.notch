@@ -251,8 +251,13 @@ final class QuickShareService: ObservableObject {
             }
 
             if response == .OK && !panel.urls.isEmpty {
-                Task {
-                    await self?.shareFilesOrText(panel.urls, using: provider, from: view)
+                if provider.id == QuickShareProvider.localSendId, Defaults[.localSendEnabled] {
+                    // Na hora (antes do `defer`), para o notch não fechar entre o seletor e o slot.
+                    LocalSendService.shared.arm(urls: panel.urls, texts: [])
+                } else {
+                    Task {
+                        await self?.shareFilesOrText(panel.urls, using: provider, from: view)
+                    }
                 }
             }
         }
@@ -265,6 +270,17 @@ final class QuickShareService: ObservableObject {
     @MainActor
     func shareFilesOrText(_ items: [Any], using provider: QuickShareProvider, from view: NSView?) async {
         let fileURLs = items.compactMap { $0 as? URL }.filter { $0.isFileURL }
+        if provider.id == QuickShareProvider.localSendId, Defaults[.localSendEnabled] {
+            // Integrado: os itens ficam no slot esperando você escolher o aparelho
+            // (o LocalSendService segura o notch aberto enquanto isso).
+            let texts = items.compactMap { item -> String? in
+                if let url = item as? URL, !url.isFileURL { return url.absoluteString }
+                return (item as? String) ?? (item as? NSString).map(String.init)
+            }
+            LocalSendService.shared.arm(urls: fileURLs, texts: texts)
+            return
+        }
+
         // Stop any previous sharing access
         stopSharingAccessingURLs()
         // Start security-scoped access for all file URLs
@@ -276,17 +292,6 @@ final class QuickShareService: ObservableObject {
             self?.stopSharingAccessingURLs()
         }
         lifecycleDelegate = delegate
-
-        if provider.id == QuickShareProvider.localSendId, Defaults[.localSendEnabled] {
-            // Integrado: os itens ficam no slot esperando você escolher o aparelho.
-            let texts = items.compactMap { item -> String? in
-                if let url = item as? URL, !url.isFileURL { return url.absoluteString }
-                return (item as? String) ?? (item as? NSString).map(String.init)
-            }
-            LocalSendService.shared.arm(urls: fileURLs, texts: texts)
-            stopSharingAccessingURLs()
-            return
-        }
 
         if provider.id == QuickShareProvider.localSendId {
             // markServiceBegan segura o notch aberto e se encerra sozinho em 2s.

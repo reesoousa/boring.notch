@@ -516,6 +516,8 @@ extension Defaults.Keys {
     // LocalSend integrado (boringCode)
     static let localSendEnabled = Key<Bool>("localSendEnabled", default: true)
     static let localSendReceive = Key<Bool>("localSendReceive", default: true)
+    /// Ao receber, abre o notch no Shelf (e fecha sozinho depois).
+    static let localSendOpenOnReceive = Key<Bool>("localSendOpenOnReceive", default: true)
     /// Nome deste Mac para os outros aparelhos; vazio = nome do computador.
     static let localSendAlias = Key<String>("localSendAlias", default: "")
     static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)

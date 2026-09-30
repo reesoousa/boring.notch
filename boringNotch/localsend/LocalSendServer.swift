@@ -63,6 +63,9 @@ final class LocalSendServer: @unchecked Sendable {  // estado só é tocado em `
     private var listener: NWListener?
     private var identity: LocalSendIdentity?
     private var connections: [ObjectIdentifier: LocalSendHTTPConnection] = [:]
+    private var stopped = true
+    /// Teto de conexões simultâneas (um envio usa poucas; o resto é abuso).
+    private static let maxConnections = 32
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "boringcode", category: "LocalSend")
 
     init(queue: DispatchQueue) {
@@ -72,12 +75,14 @@ final class LocalSendServer: @unchecked Sendable {  // estado só é tocado em `
     func start(identity: LocalSendIdentity) {
         queue.async {
             self.identity = identity
+            self.stopped = false
             self.listen(on: LocalSendProtocol.port)
         }
     }
 
     func stop() {
         queue.async {
+            self.stopped = true
             self.listener?.cancel()
             self.listener = nil
             self.port = nil
@@ -87,7 +92,7 @@ final class LocalSendServer: @unchecked Sendable {  // estado só é tocado em `
     }
 
     private func listen(on requestedPort: UInt16?) {
-        guard let identity, let secIdentity = sec_identity_create(identity.identity) else { return }
+        guard !stopped, let identity, let secIdentity = sec_identity_create(identity.identity) else { return }
 
         let tls = NWProtocolTLS.Options()
         let options = tls.securityProtocolOptions
@@ -145,6 +150,10 @@ final class LocalSendServer: @unchecked Sendable {  // estado só é tocado em `
     }
 
     private func accept(_ connection: NWConnection) {
+        guard !stopped, connections.count < Self.maxConnections else {
+            connection.cancel()
+            return
+        }
         let handler = LocalSendHTTPConnection(connection: connection, queue: queue) { [weak self] request in
             self?.route?(request) ?? .reject(.message(404, "Not found"))
         }
@@ -174,8 +183,11 @@ private final class LocalSendHTTPConnection: @unchecked Sendable {
     private var collected = Data()
     private var responded = false
     private var closed = false
+    private var lastActivity = Date()
 
     private static let maxHeaderBytes = 64 * 1024
+    /// Sem receber nada por esse tempo, a conexão cai (celular saiu da rede, cliente parado).
+    private static let idleTimeout: TimeInterval = 30
 
     init(connection: NWConnection, queue: DispatchQueue, route: @escaping (LocalSendServer.Request) -> LocalSendServer.BodyPlan) {
         self.connection = connection
@@ -193,10 +205,18 @@ private final class LocalSendHTTPConnection: @unchecked Sendable {
             }
         }
         connection.start(queue: queue)
-        // Conexão parada (nunca manda nada) não fica pendurada para sempre.
-        queue.asyncAfter(deadline: .now() + 30) { [weak self] in
-            guard let self, self.plan == nil else { return }
-            self.cancel()
+        scheduleIdleCheck()
+    }
+
+    /// Conexão parada não fica pendurada para sempre (nem o arquivo parcial aberto).
+    private func scheduleIdleCheck() {
+        queue.asyncAfter(deadline: .now() + 10) { [weak self] in
+            guard let self, !self.closed else { return }
+            if Date().timeIntervalSince(self.lastActivity) > Self.idleTimeout {
+                self.cancel()
+            } else {
+                self.scheduleIdleCheck()
+            }
         }
     }
 
@@ -208,13 +228,15 @@ private final class LocalSendHTTPConnection: @unchecked Sendable {
     private func close() {
         guard !closed else { return }
         closed = true
-        if !responded, case .stream(let sink)? = plan { sink.abort() }
+        // Idempotente: depois de um upload completo o sink já está fechado.
+        if case .stream(let sink)? = plan { sink.abort() }
         onClose?()
     }
 
     private func receive() {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 512 * 1024) { [weak self] data, _, isComplete, error in
             guard let self, !self.closed else { return }
+            self.lastActivity = Date()
             if let data, !data.isEmpty { self.consume(data) }
             if self.responded || self.closed { return }
             if isComplete || error != nil {
@@ -298,8 +320,11 @@ private final class LocalSendHTTPConnection: @unchecked Sendable {
         }
         if request.headers["transfer-encoding"]?.lowercased().contains("chunked") == true {
             framing = .chunked(ChunkedDecoder())
+        } else if let length = Int(request.headers["content-length"] ?? "0"), length >= 0 {
+            framing = .length(remaining: length)
         } else {
-            framing = .length(remaining: Int(request.headers["content-length"] ?? "0") ?? 0)
+            respond(.message(400, "Invalid Content-Length"))
+            return
         }
         if request.headers["expect"]?.lowercased() == "100-continue" {
             connection.send(content: Data("HTTP/1.1 100 Continue\r\n\r\n".utf8), completion: .idempotent)
@@ -386,6 +411,8 @@ private final class ChunkedDecoder {
 
     private var state: State = .size
     private var buffer = Data()
+    /// Linha de tamanho/trailer maior que isso é lixo.
+    private static let maxLine = 1024
 
     /// Devolve os pedaços decodificados e se o corpo terminou.
     func feed(_ data: Data) throws -> ([Data], Bool) {
@@ -396,7 +423,10 @@ private final class ChunkedDecoder {
         loop: while true {
             switch state {
             case .size:
-                guard let end = buffer.range(of: crlf) else { break loop }
+                guard let end = buffer.range(of: crlf) else {
+                    if buffer.count > Self.maxLine { throw DecodeError.invalid }
+                    break loop
+                }
                 let line = String(data: buffer[buffer.startIndex..<end.lowerBound], encoding: .ascii) ?? ""
                 buffer.removeSubrange(buffer.startIndex..<end.upperBound)
                 let hex = line.split(separator: ";").first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? ""
@@ -414,7 +444,10 @@ private final class ChunkedDecoder {
                 buffer.removeSubrange(buffer.startIndex..<(buffer.startIndex + 2))
                 state = .size
             case .trailer:
-                guard let end = buffer.range(of: crlf) else { break loop }
+                guard let end = buffer.range(of: crlf) else {
+                    if buffer.count > Self.maxLine { throw DecodeError.invalid }
+                    break loop
+                }
                 let isEmptyLine = end.lowerBound == buffer.startIndex
                 buffer.removeSubrange(buffer.startIndex..<end.upperBound)
                 if isEmptyLine { state = .done }

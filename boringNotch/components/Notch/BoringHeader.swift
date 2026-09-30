@@ -13,6 +13,7 @@ struct BoringHeader: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @StateObject var shelfState = ShelfStateViewModel.shared
+    @ObservedObject var localSend = LocalSendService.shared
     var body: some View {
         HStack(spacing: 0) {
             HStack {
@@ -45,6 +46,10 @@ struct BoringHeader: View {
                              icon: coordinator.binding(for: vm.screenUUID).icon,
                              accent: coordinator.binding(for: vm.screenUUID).accent
                         )
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    } else if let transfer = localSend.incoming {
+                        // boringCode: chegando pelo LocalSend.
+                        LocalSendHeaderPill(transfer: transfer)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {
                         if Defaults[.showMirror] && coordinator.currentView == .home {
@@ -100,6 +105,7 @@ struct BoringHeader: View {
             }
             .font(.system(.headline, design: .rounded))
             .frame(maxWidth: .infinity, alignment: .trailing)
+            .animation(.smooth(duration: 0.3), value: localSend.incoming?.id)
             .opacity(vm.notchState == .closed ? 0 : 1)
             .blur(radius: vm.notchState == .closed ? 20 : 0)
             .zIndex(2)
