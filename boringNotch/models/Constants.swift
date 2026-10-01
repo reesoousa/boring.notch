@@ -354,10 +354,11 @@ enum UpdateChannel: String, CaseIterable, Identifiable, Defaults.Serializable {
         }
     }
 
+    /// boringCode: um appcast só (GitHub Pages do fork), assinado com a chave própria. Os canais
+    /// beta/nightly ficam como `sparkle:channel` nos itens, se um dia existirem. Nunca apontar para
+    /// o appcast do Boring Notch: a atualização trocaria o boringCode pelo app original.
     var feedURLString: String {
-        self == .dev
-            ? "https://raw.githubusercontent.com/TheBoredTeam/boring.notch/dev/updater/appcast-dev.xml"
-            : "https://TheBoredTeam.github.io/boring.notch/appcast.xml"
+        "https://reesoousa.github.io/boringCode/appcast.xml"
     }
 
     var allowedSparkleChannels: Set<String> {
