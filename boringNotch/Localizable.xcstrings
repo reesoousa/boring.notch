@@ -32582,6 +32582,336 @@
           }
         }
       }
+    },
+    "Your AI agents in the notch" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seus agentes de IA no notch"
+          }
+        }
+      }
+    },
+    "Follow Claude Code and Codex while they work, approve requests and answer questions right in the notch, and jump back to the right terminal with a click." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acompanhe o Claude Code e o Codex enquanto trabalham, aprove pedidos e responda perguntas ali no notch, e volte para o terminal certo com um clique."
+          }
+        }
+      }
+    },
+    "boringCode adds a hook to the Claude Code and Codex settings (with a backup). Nothing leaves your Mac." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O boringCode adiciona um gancho nos ajustes do Claude Code e do Codex (com backup). Nada sai do seu Mac."
+          }
+        }
+      }
+    },
+    "Use Agents" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar agentes"
+          }
+        }
+      }
+    },
+    "Windows and system controls" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Janelas e controles do sistema"
+          }
+        }
+      }
+    },
+    "These features need %@ to move windows and read alerts from other apps. Choose the ones you want:" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estes recursos precisam de %@ para mexer em janelas e ler avisos de outros apps. Escolha os que quer usar:"
+          }
+        }
+      }
+    },
+    "%@ is used only for these features. No data is collected or shared." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ é usado só para esses recursos. Nada é coletado ou compartilhado."
+          }
+        }
+      }
+    },
+    "Snap windows" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encaixar janelas"
+          }
+        }
+      }
+    },
+    "Drag a window to the notch and choose where it goes." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste uma janela até o notch e escolha onde ela fica."
+          }
+        }
+      }
+    },
+    "Notifications in the notch" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificações no notch"
+          }
+        }
+      }
+    },
+    "Shows alerts from your apps in the notch." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra os avisos dos seus apps no notch."
+          }
+        }
+      }
+    },
+    "Volume and brightness" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume e brilho"
+          }
+        }
+      }
+    },
+    "Replaces the system indicator with the notch one." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troca o indicador do sistema pelo do notch."
+          }
+        }
+      }
+    },
+    "Share files with your phone" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trocar arquivos com o celular"
+          }
+        }
+      }
+    },
+    "Send and receive files with iPhone and Android through LocalSend, right from the Shelf, without opening another app. Received files go to Downloads." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envie e receba arquivos de iPhone e Android pelo LocalSend, direto do Shelf, sem abrir outro app. Os recebidos vão para Downloads."
+          }
+        }
+      }
+    },
+    "Everything stays on your local network, encrypted. macOS will ask for Local Network access." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo fica na sua rede local, criptografado. O macOS vai pedir acesso à Rede Local."
+          }
+        }
+      }
+    },
+    "Use LocalSend" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar LocalSend"
+          }
+        }
+      }
+    },
+    "A mirror in the notch" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um espelho no notch"
+          }
+        }
+      }
+    },
+    "Check your look before a call with a live camera preview, right from the notch." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confira o visual antes de uma chamada com a câmera ao vivo, direto do notch."
+          }
+        }
+      }
+    },
+    "The camera only turns on while the mirror is open. Nothing is recorded or stored." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A câmera só liga com o espelho aberto. Nada é gravado nem guardado."
+          }
+        }
+      }
+    },
+    "Use Mirror" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar o espelho"
+          }
+        }
+      }
+    },
+    "Your day at a glance" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seu dia num relance"
+          }
+        }
+      }
+    },
+    "See your upcoming events and reminders in the open notch." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veja os próximos eventos e lembretes no notch aberto."
+          }
+        }
+      }
+    },
+    "Your calendar and reminders are only used to show your schedule and are never shared." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seu calendário e seus lembretes só servem para mostrar a agenda e nunca são compartilhados."
+          }
+        }
+      }
+    },
+    "Use Calendar" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar o calendário"
+          }
+        }
+      }
+    },
+    "A live visualizer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um visualizador ao vivo"
+          }
+        }
+      }
+    },
+    "boringCode can analyze the audio playing from your music app to draw a live waveform in the notch, with only a minimal impact on CPU usage." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O boringCode pode analisar o áudio do seu app de música para desenhar uma onda ao vivo no notch, quase sem pesar no processador."
+          }
+        }
+      }
+    },
+    "Use Visualizer" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar o visualizador"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pular"
+          }
+        }
+      }
+    },
+    "Turn on boringCode in System Settings, then come back here." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligue o boringCode nos Ajustes do Sistema e volte aqui."
+          }
+        }
+      }
+    },
+    "All set" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etapa %lld de %lld"
+          }
+        }
+      }
+    },
+    "Audio is processed locally for the visualizer and never recorded, stored, or shared." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O áudio é processado no seu Mac só para o visualizador e nunca é gravado, guardado ou compartilhado."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
