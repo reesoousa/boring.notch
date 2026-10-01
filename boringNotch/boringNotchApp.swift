@@ -191,8 +191,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SettingsWindowController.shared.setCamera(camera)
         // No app hospedeiro dos testes do Xcode, não mexe nos hooks nem no socket do app instalado.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            AgentSessionStore.shared.start()
-            LocalSendService.shared.start()
+            // Na primeira abertura o onboarding pergunta antes: os hooks dos agentes e a
+            // busca na rede local (que faz o macOS pedir permissão) só começam no "sim"
+            // de cada tela, ou ao terminar o onboarding.
+            if !BoringViewCoordinator.shared.firstLaunch {
+                startAgentAndNetworkServices()
+            }
             WindowDragMonitor.shared.start()
         }
 
@@ -350,6 +354,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator.applyOSDSources()
     }
 
+    /// Pode ser chamado mais de uma vez (cada serviço só liga uma vez e segue o próprio ajuste).
+    func startAgentAndNetworkServices() {
+        AgentSessionStore.shared.start()
+        LocalSendService.shared.start()
+    }
+
     func playWelcomeSound() {
         let audioPlayer = AudioPlayer()
         audioPlayer.play(fileName: "boring", fileExtension: "m4a")
@@ -378,7 +388,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showOnboardingWindow(step: OnboardingStep = .welcome) {
         if onboardingWindowController == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
+                contentRect: NSRect(x: 0, y: 0, width: 400, height: 640),
                 styleMask: [.titled, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
@@ -392,13 +402,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 rootView: OnboardingView(
                     step: step,
                     updater: SoftwareUpdateStore.updater,
-                    onFinish: {
+                    onFinish: { [weak self] in
+                        self?.startAgentAndNetworkServices()
                         window.orderOut(nil)
 //                        NSApp.setActivationPolicy(.accessory)
                         window.close()
                         NSApp.deactivate()
                     },
-                    onOpenSettings: {
+                    onOpenSettings: { [weak self] in
+                        self?.startAgentAndNetworkServices()
                         window.close()
                         SettingsWindowController.shared.showWindow()
                     }

@@ -93,6 +93,7 @@ final class LocalSendService: ObservableObject {
     // MARK: - Ciclo de vida
 
     func start() {
+        guard cancellables.isEmpty else { return }  // o onboarding pode ligar antes do fim
         Defaults.publisher(.localSendEnabled)
             .map(\.newValue)
             .removeDuplicates()

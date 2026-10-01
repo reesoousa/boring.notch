@@ -239,3 +239,19 @@ do Sapphire (`github.com/cshariq/Sapphire`, **AGPL-3.0** — só a ideia; códig
   o movimento (o processo precisa de Acessibilidade).
 - Layouts em `SnapLayout.all` (frações com origem em cima). Cuidado: `CGRect(x: 1 / 3, …)` escolhe o init de `Int`
   e vira 0 — usar `1.0 / 3`.
+
+## Onboarding (`components/Onboarding/`)
+
+Decisão do dono (2026-10-01): uma tela por recurso que **pergunta se quer usar e já pede a permissão do sistema**
+(`FeatureRequestView`, com pontinhos de progresso e estados pedindo / esperando nos Ajustes / pronto ✓).
+Ordem: boas-vindas → agentes → janelas e controles (Acessibilidade: encaixe, notificações, volume/brilho, com
+caixinhas) → LocalSend (Rede Local) → espelho (câmera) → calendário + lembretes → visualizador (áudio, 14.2+) →
+player de música → atualizações → pronto. "Agora não" desliga o recurso no `Defaults`.
+- Na primeira abertura (`firstLaunch`, `@AppStorage`) os hooks dos agentes e a rede do LocalSend **não ligam
+  sozinhos**: começam no "sim" da tela ou ao terminar o onboarding (`startAgentAndNetworkServices`, idempotente).
+- Acessibilidade: o pedido abre o aviso do sistema; a janela do onboarding sai de `.floating` para não cobrir os
+  Ajustes e a tela consulta o helper a cada 1 s até liberar.
+- Rever o onboarding: `defaults write com.reesoousa.boringcode firstLaunch -bool true` e abrir o app (as escolhas
+  mudam os ajustes de verdade). PNGs das telas: `NSHostingView` numa `NSWindow` + `cacheDisplay` num teste
+  temporário (desenha os controles do AppKit, que o `ImageRenderer` não desenha).
+

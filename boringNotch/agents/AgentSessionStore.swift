@@ -44,6 +44,7 @@ final class AgentSessionStore: ObservableObject {
     // MARK: - Ciclo de vida
 
     func start() {
+        guard enabledCancellable == nil else { return }  // o onboarding pode ligar antes do fim
         enabledCancellable = Defaults.publisher(.agentsEnabled)
             .sink { [weak self] change in
                 Task { @MainActor in self?.applyEnabled(change.newValue) }
