@@ -24,7 +24,7 @@ Ajustes do boringCode.
 |---|---|
 | Agentes de IA (Claude Code e Codex) | nenhuma; ao clicar numa sessão, o macOS pede **Automação** para focar o Terminal/iTerm |
 | Encaixe de janelas, notificações no notch, volume e brilho | **Acessibilidade** (no macOS 27: "Controle do Dispositivo e Acesso a Dados") |
-| LocalSend (trocar arquivos com o celular) | **Rede Local** |
+| LocalSend (trocar arquivos com o celular) | **Rede Local** e a pasta **Downloads** (onde os recebidos ficam) |
 | Espelho | **Câmera** |
 | Calendário e lembretes | **Calendários** e **Lembretes** |
 | Visualizador de áudio | **Gravação de áudio do sistema** |
