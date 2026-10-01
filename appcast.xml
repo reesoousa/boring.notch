@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>boringCode</title>
+    <link>https://github.com/reesoousa/boringCode</link>
+    <language>pt-BR</language>
+    <item>
+      <title>boringCode 0.5.0 — Concierge Cat 🐱🛎️</title>
+      <pubDate>Thu, 01 Oct 2026 13:42:15 +0000</pubDate>
+      <sparkle:version>276</sparkle:version>
+      <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/reesoousa/boringCode/releases/tag/v0.5.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[
+<style>body{font:13px -apple-system,sans-serif;line-height:1.45} h3{font-size:14px;margin:14px 0 6px} ul{padding-left:20px}</style>
+<p><strong>boringCode 0.5.0 "Concierge Cat" 🐱🛎️</strong>: recebe você bem na primeira abertura e, daqui pra frente, se atualiza sozinho.</p>
+<h3>Novidades</h3>
+<ul>
+<li><strong>Atualizações automáticas.</strong> A partir desta versão, o boringCode avisa quando sai uma nova e instala com um clique. Não precisa mais baixar o DMG de novo.</li>
+<ul>
+<li>Em Ajustes › Sobre, dá para escolher se ele procura e baixa sozinho.</li>
+</ul>
+<li><strong>Boas-vindas que já deixam tudo pronto.</strong> Na primeira abertura, uma tela por recurso pergunta se você quer usar e já pede a permissão do sistema na hora:</li>
+<ul>
+<li>agentes de IA (Claude Code e Codex);</li>
+<li>encaixe de janelas, notificações e volume/brilho no notch (Acessibilidade);</li>
+<li>LocalSend (Rede Local), espelho (câmera), calendário e lembretes, e o visualizador de áudio.</li>
+<li>"Agora não" deixa o recurso desligado, e dá para mudar tudo depois nos Ajustes.</li>
+</ul>
+<li><strong>Mais seguro:</strong> os ganchos dos agentes e a busca na rede local só ligam depois que você diz sim.</li>
+<li>Tudo da 0.4.0 continua: encaixe de janelas pelo notch, monitor do sistema, LocalSend no shelf, agentes no notch, música, calendário e shelf.</li>
+</ul>
+      ]]></description>
+      <enclosure url="https://github.com/reesoousa/boringCode/releases/download/v0.5.0/boringCode-0.5.0.dmg" type="application/octet-stream" sparkle:edSignature="5UwPZxrBcR0iT15U8P3Q0J9jHGlFMCSrotjoiGjYVo6Zgeiewwe8zjpDQn29xiy7SZrIfiu3f32rmvzvYW15BA==" length="18576854" />
+    </item>
+  </channel>
+</rss>
