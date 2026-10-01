@@ -32,6 +32,30 @@
 
 ---
 
+## Instalar
+
+**Peça para a sua IA.** Cole isto no Claude Code, Codex ou Cursor:
+
+```text
+Instale o boringCode no meu Mac seguindo https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/docs/instalar-com-ia.md
+```
+
+**Ou rode no Terminal:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/scripts/install.sh | bash
+```
+
+- Nos dois jeitos, o [instalador](scripts/install.sh) baixa o app pronto da [Release](https://github.com/reesoousa/boringCode/releases) mais recente, sem compilar nada.
+- Ele confere o SHA-256 e a assinatura, instala em **Aplicativos** e abre o app.
+- Na primeira abertura, as boas-vindas perguntam quais recursos você quer e pedem as permissões do macOS na hora.
+- Depois disso, as versões novas chegam sozinhas.
+- Requer macOS 14 ou mais novo, em Apple Silicon ou Intel.
+
+**Ou pelo DMG:** baixe em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o [guia de instalação](docs/instalar.md).
+
+Para desinstalar, use o mesmo comando com `| bash -s -- --uninstall`. Ele também tira os hooks do Claude Code e do Codex.
+
 ## O que é
 
 O **boringCode** é um fork do [Boring Notch](https://github.com/TheBoredTeam/boring.notch) que mantém tudo o que ele já faz
@@ -106,14 +130,10 @@ notch. Precisa da permissão de **Acessibilidade** (no macOS 27, "Controle do Di
 avisa e pede na primeira vez. Ajustes › Encaixe de janelas: quais layouts mostrar, deslizar ou não, e margens entre
 as janelas.
 
-## Instalação
+## Compilar
 
-**Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
-[guia de instalação](docs/instalar.md). O app é assinado, mas não notarizado: na primeira abertura o macOS pede
-para liberar em **Ajustes › Privacidade e Segurança › Abrir mesmo assim**. Depois disso, as boas-vindas pedem cada
-permissão conforme você liga os recursos, e as versões novas **chegam sozinhas** (Sparkle).
-
-**Compilando:** macOS 14+, Xcode 16+.
+Para mexer no código: macOS 14+ e Xcode 16+. Para só usar o app, veja [Instalar](#instalar).
+Os detalhes para desenvolver, como a assinatura de dev e os scripts, estão no [CLAUDE.md](CLAUDE.md).
 
 ```bash
 git clone -b dev https://github.com/reesoousa/boringCode.git

@@ -2,6 +2,19 @@
 
 Precisa de um Mac com **macOS 14 (Sonoma) ou mais novo**. Funciona em Apple Silicon e Intel.
 
+## Jeito rápido
+
+Rode no Terminal, ou peça para a sua IA seguir o [guia para agentes](instalar-com-ia.md):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/scripts/install.sh | bash
+```
+
+O comando baixa o app pronto, confere e instala em Aplicativos. Nesse caminho não aparece o aviso de
+"desenvolvedor não verificado", então pule para [Boas-vindas e permissões](#boas-vindas-e-permissões).
+
+## Pelo DMG
+
 1. Baixe o `boringCode-<versão>.dmg` mais recente em
    [Releases](https://github.com/reesoousa/boringCode/releases), abra e arraste o **boringCode** para
    **Aplicativos**.
@@ -50,5 +63,11 @@ centro ou preencher). Para continuar arrastando normalmente, é só se afastar d
 
 ## Desinstalar
 
-Antes, em **Ajustes › Agentes de IA**, clique em **Remover hooks** em cada agente. Depois feche o
-app pela barra de menus e apague-o de Aplicativos.
+```bash
+curl -fsSL https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/scripts/install.sh | bash -s -- --uninstall
+```
+
+O comando tira os hooks do boringCode do Claude Code e do Codex (com backup) e apaga o app.
+
+Para fazer à mão: em **Ajustes › Agentes de IA**, clique em **Remover hooks** em cada agente. Depois feche
+o app pela barra de menus e apague-o de Aplicativos.

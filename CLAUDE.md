@@ -4,6 +4,8 @@ Fork do [Boring Notch](https://github.com/TheBoredTeam/boring.notch) (branch `de
 recursos do [Open Island](https://github.com/Octane0411/open-vibe-island): monitorar agentes de IA
 (Claude Code, Codex) no notch, aprovar ações e voltar pro terminal certo.
 
+- **Só instalar (sem compilar):** `scripts/install.sh` (baixa o DMG da última Release; guia para agentes em
+  `docs/instalar-com-ia.md`). Este arquivo é para quem vai **desenvolver**.
 - **Dono:** @reesoousa (UX designer — explicar decisões técnicas em linguagem simples).
 - **Licença:** GPL-3.0 (os dois projetos). Código portado do Open Island mantém crédito no
   cabeçalho do arquivo (`// Adaptado de Open Island (github.com/Octane0411/open-vibe-island), GPL-3.0`).
@@ -137,6 +139,10 @@ fora (`scripts/lib/sign-app.sh`) com a identidade "Apple Development" do chaveir
 - Lançar versão: subir `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` (build sempre maior) → `make-dmg.sh` →
   PR → merge → `gh release create` com o DMG → `scripts/publish-appcast.sh` (assina, gera o appcast com as notas
   de `dist/release-notes-v<versão>.md` e publica no `gh-pages`). Appcast só com a versão mais nova.
+- `scripts/install.sh` (instalação sem compilar, usada no README e por agentes de IA) pega a Release mais nova
+  pela API e procura o asset `boringCode-*.dmg`, conferindo o `digest` SHA-256 do GitHub: manter esse nome no DMG.
+  Testar sem mexer no app instalado: `BORINGCODE_DIR=<pasta> scripts/install.sh --no-open` (e `HOME=<pasta falsa>`
+  para testar o `--uninstall`).
 
 Próximos passos:
 1. Opcional: fundo próprio do DMG (660×400, `Configuration/dmg/.background/background.tiff`).
