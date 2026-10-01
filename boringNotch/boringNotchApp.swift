@@ -187,6 +187,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowManager.screenUnlocked()
     }
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Antes de abrir janelas e serviços, para não ficar com dois notches.
+        // O app hospedeiro dos testes tem o mesmo bundle ID e não pode fechar o instalado.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            NSRunningApplication.terminateOlderInstances()
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         SettingsWindowController.shared.setCamera(camera)
         // No app hospedeiro dos testes do Xcode, não mexe nos hooks nem no socket do app instalado.
