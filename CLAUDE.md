@@ -14,7 +14,7 @@ recursos do [Open Island](https://github.com/Octane0411/open-vibe-island): monit
 - Swift 5/6 + SwiftUI + AppKit, projeto Xcode (`boringNotch.xcodeproj`), macOS 14+.
 - App **sem sandbox** (ver "Módulo de agentes") + helper XPC (`BoringNotchXPCHelper/`)
   para trabalho privilegiado (Accessibility, brilho, notificações).
-- Versão atual: **0.3.0 "Lookout Cat"** (`MARKETING_VERSION` no projeto; apelido em
+- Versão atual: **0.4.0 "Window Cat"** (`MARKETING_VERSION` no projeto; apelido em
   `BoringCodeRelease.name`, `AboutView.swift`).
 - SPM: Defaults (settings), Sparkle (updates), SkyLightWindow, Lottie, Pow, KeyboardShortcuts,
   LaunchAtLogin, swiftui-introspect, swift-collections, AsyncXPCConnection, MacroVisionKit.
