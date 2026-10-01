@@ -518,6 +518,15 @@ extension Defaults.Keys {
     /// Segundos entre leituras (só enquanto a aba está aberta).
     static let monitorInterval = Key<Double>("monitorInterval", default: 1)
 
+    // MARK: Window snapping (boringCode)
+    static let windowSnapEnabled = Key<Bool>("windowSnapEnabled", default: true)
+    /// A janela desliza até o lugar (desligado com Reduzir movimento).
+    static let windowSnapAnimate = Key<Bool>("windowSnapAnimate", default: true)
+    /// Espaço entre as janelas encaixadas e as bordas, como "Janelas lado a lado têm margens" do macOS.
+    static let windowSnapMargins = Key<Bool>("windowSnapMargins", default: false)
+    /// Layouts escondidos no notch (lista do que sai, para layouts novos já aparecerem).
+    static let windowSnapHiddenLayouts = Key<[String]>("windowSnapHiddenLayouts", default: [])
+
     // MARK: Shelf
     static let boringShelf = Key<Bool>("boringShelf", default: true)
     static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)

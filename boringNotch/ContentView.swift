@@ -24,6 +24,7 @@ struct ContentView: View {
     @ObservedObject var notificationManager = SystemNotificationManager.shared
     @ObservedObject var agentStore = AgentSessionStore.shared
     @ObservedObject var localSend = LocalSendService.shared
+    @ObservedObject var windowSnap = WindowDragMonitor.shared
     /// Which entry of the closed-notch activity stack is on top.
     @State private var activityIndex: Int = 0
     @State private var hoverTask: Task<Void, Never>?
@@ -38,6 +39,8 @@ struct ContentView: View {
     @State private var autoOpenedForApproval = false
     /// Notch aberto sozinho por um arquivo chegando pelo LocalSend.
     @State private var autoOpenedForReceive = false
+    /// Notch aberto sozinho porque uma janela foi arrastada até ele.
+    @State private var openedForWindowSnap = false
 
     @State private var haptics: Bool = false
 
@@ -161,6 +164,12 @@ struct ContentView: View {
     /// between — there's only the player to show, so a switcher would have
     /// nothing to switch to. Also what keeps the panel narrow, since the
     /// header spans the full notch width.
+    /// Uma janela está sendo arrastada até este notch: mostra os layouts de encaixe.
+    private var isShowingWindowSnap: Bool {
+        guard vm.notchState == .open, let uuid = windowSnap.pickerScreenUUID else { return false }
+        return uuid == (vm.screenUUID ?? coordinator.selectedScreenUUID)
+    }
+
     private var showsHeader: Bool {
         vm.notchState == .open
             && notificationManager.activeNotification == nil
@@ -368,6 +377,9 @@ struct ContentView: View {
                         guard completion != nil, vm.notchState == .open, !vm.isPopoverActive else { return }
                         vm.close()
                     }
+                    .onChange(of: windowSnap.pickerScreenUUID) { _, uuid in
+                        handleWindowSnapPicker(uuid)
+                    }
                     .onChange(of: localSend.incoming?.id) { _, id in
                         if id != nil { expandForLocalSendReceive() }
                     }
@@ -531,6 +543,9 @@ struct ContentView: View {
                           }
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed {
                           BoringFaceAnimation()
+                       } else if isShowingWindowSnap {
+                           WindowSnapHeader()
+                               .frame(height: max(38, displayClosedNotchHeight))
                        } else if showsHeader {
                            // No tab bar over a notification: it's a glance,
                            // not a place to switch between home and shelf —
@@ -595,7 +610,11 @@ struct ContentView: View {
                 VStack {
                     // An open notch with a live notification is showing the
                     // reply UI — the usual tabs can wait until it's dismissed.
-                    if let notification = notificationManager.activeNotification {
+                    if isShowingWindowSnap {
+                        // No modo compacto o notch se ajusta ao conteúdo: dá um tamanho próprio.
+                        WindowSnapPickerView()
+                            .frame(width: Defaults[.compactMode] ? 560 : nil, height: Defaults[.compactMode] ? 108 : nil)
+                    } else if let notification = notificationManager.activeNotification {
                         NotificationExpandedView(notification: notification)
                             .id(notification.id)
                     } else if Defaults[.compactMode] && coordinator.currentView != .agents {
@@ -966,9 +985,22 @@ extension ContentView {
         }
     }
 
+    /// Janela arrastada chegou ao notch (ou saiu): abre com os layouts e fecha depois,
+    /// se foi o arraste que abriu. Com o notch já aberto, só troca o conteúdo e volta.
+    private func handleWindowSnapPicker(_ uuid: String?) {
+        if let uuid, uuid == (vm.screenUUID ?? coordinator.selectedScreenUUID) {
+            guard vm.notchState == .closed else { return }
+            withAnimation(animationSpring) { openedForWindowSnap = vm.open() }
+        } else if openedForWindowSnap {
+            openedForWindowSnap = false
+            if vm.notchState == .open { vm.close() }
+        }
+    }
+
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
+        if !hovering { windowSnap.pointerLeftNotch() }
 
         if hovering {
             // Você assumiu o notch: ele volta a fechar pelo hover normal.
@@ -994,6 +1026,7 @@ extension ContentView {
             guard vm.notchState == .closed,
                   !shouldDisplayNowPlayingFallbackNotice,
                   !coordinator.shouldShowSneakPeek(on: vm.screenUUID),
+                  !windowSnap.holdsHoverOpen,
                   Defaults[.openNotchOnHover] else { return }
 
             hoverTask = Task {
@@ -1024,6 +1057,7 @@ extension ContentView {
 
                     if self.vm.notchState == .open,
                        !self.vm.isPopoverActive,
+                       !self.isShowingWindowSnap,
                        !SharingStateManager.shared.preventNotchClose {
                         self.vm.close()
                     }

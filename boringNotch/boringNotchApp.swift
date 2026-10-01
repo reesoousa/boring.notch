@@ -193,6 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             AgentSessionStore.shared.start()
             LocalSendService.shared.start()
+            WindowDragMonitor.shared.start()
         }
 
         NotificationCenter.default.addObserver(

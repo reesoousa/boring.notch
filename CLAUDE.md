@@ -216,3 +216,26 @@ continua o serviço padrão do Shelf (LocalSend se escolhe em Ajustes › Shelf)
   player (4 pt, trilho cinza 0.3, branco). Entrada em cascata diagonal (desfoque → nítido, mola) e `CountingText`
   (Animatable) conta do zero junto com a barra; respeita Reduzir movimento. Ajustes › Monitor do sistema.
 
+## Encaixe de janelas (`boringNotch/windowsnap/`)
+
+Decisão do dono (2026-10-01): arrastar uma janela até o notch abre layouts para redimensioná-la, como as "Snap Zones"
+do Sapphire (`github.com/cshariq/Sapphire`, **AGPL-3.0** — só a ideia; código próprio, sem copiar trechos).
+
+- `WindowDragMonitor`: monitores globais de mouse (sem Acessibilidade). No clique guarda a janela de camada 0 sob o
+  ponteiro (`CGWindowList`; o Dock tem uma janela invisível de tela inteira na camada 20, por isso só camada 0); se ela
+  anda do mesmo tamanho, é arraste de janela. Perto do notch (110 ms) publica `pickerScreenUUID` → `ContentView` abre
+  o notch com `WindowSnapPickerView` + `WindowSnapHeader` e fecha ao terminar (se foi o arraste que abriu).
+- Durante o arraste o notch não recebe hover: o acerto das zonas é feito no monitor com `NSEvent.mouseLocation` e as
+  miniaturas, que se registram como `NSView` (`ScreenRectReader`) e são convertidas para a tela na hora.
+- `WindowSnapPreview`: painel transparente do tamanho da tela, `order(.below, relativeTo: janela arrastada)`, vidro
+  `.hudWindow` com canto 14; desliza entre zonas com mola.
+- **Quem move a janela é o helper XPC** (`BoringNotchXPCHelper/WindowMover.swift`, `moveWindow` no protocolo): a
+  permissão de Acessibilidade é dele, não do app (`AXIsProcessTrusted()` no app dá false). Acha a janela por
+  `_AXUIElementGetWindow` (privada), desliga `AXEnhancedUserInterface` enquanto mexe, desliza 0,24 s a 60 Hz e
+  desiste do deslize se um passo passar de 30 ms. Sem permissão o cabeçalho avisa e soltar abre o pedido do sistema.
+- Depois de encaixar, `holdsHoverOpen` impede o notch de reabrir por hover até o ponteiro sair (máx. 3 s).
+- Testar sem mexer à mão: um executável com `CGEvent` (`leftMouseDown`/`leftMouseDragged`/`leftMouseUp` em
+  `.cghidEventTap`) arrasta uma janela do Finder; `WindowMover.swift` compila sozinho com um `main.swift` para testar
+  o movimento (o processo precisa de Acessibilidade).
+- Layouts em `SnapLayout.all` (frações com origem em cima). Cuidado: `CGRect(x: 1 / 3, …)` escolhe o init de `Int`
+  e vira 0 — usar `1.0 / 3`.

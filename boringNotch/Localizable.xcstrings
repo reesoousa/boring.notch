@@ -32322,6 +32322,266 @@
           }
         }
       }
+    },
+    "Halves" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metades"
+          }
+        }
+      }
+    },
+    "Thirds" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terços"
+          }
+        }
+      }
+    },
+    "Focus" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foco"
+          }
+        }
+      }
+    },
+    "Quarters" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quartos"
+          }
+        }
+      }
+    },
+    "Center" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centro"
+          }
+        }
+      }
+    },
+    "Fill" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preencher"
+          }
+        }
+      }
+    },
+    "Left Half" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metade esquerda"
+          }
+        }
+      }
+    },
+    "Right Half" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metade direita"
+          }
+        }
+      }
+    },
+    "Left Third" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terço esquerdo"
+          }
+        }
+      }
+    },
+    "Center Third" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terço do meio"
+          }
+        }
+      }
+    },
+    "Right Third" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terço direito"
+          }
+        }
+      }
+    },
+    "Left Two Thirds" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dois terços à esquerda"
+          }
+        }
+      }
+    },
+    "Top Left" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Superior esquerdo"
+          }
+        }
+      }
+    },
+    "Top Right" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Superior direito"
+          }
+        }
+      }
+    },
+    "Bottom Left" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inferior esquerdo"
+          }
+        }
+      }
+    },
+    "Bottom Right" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inferior direito"
+          }
+        }
+      }
+    },
+    "Drop on a layout" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solte num layout"
+          }
+        }
+      }
+    },
+    "Window Snapping" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encaixe de janelas"
+          }
+        }
+      }
+    },
+    "Grant %@ to move and resize windows." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conceda %@ para mover e redimensionar janelas."
+          }
+        }
+      }
+    },
+    "Snap windows dragged to the notch" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encaixar janelas arrastadas até o notch"
+          }
+        }
+      }
+    },
+    "Drag a window by its title bar up to the notch, then drop it on a layout. To keep dragging normally, just move away from the notch." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste uma janela pela barra de título até o notch e solte num layout. Para continuar arrastando normalmente, é só se afastar do notch."
+          }
+        }
+      }
+    },
+    "Layouts" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layouts"
+          }
+        }
+      }
+    },
+    "Slide windows into place" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslizar as janelas até o lugar"
+          }
+        }
+      }
+    },
+    "Leave margins between windows" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deixar margens entre as janelas"
+          }
+        }
+      }
+    },
+    "With Reduce Motion on, windows jump straight to their place." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com Reduzir movimento ligado, as janelas vão direto para o lugar."
+          }
+        }
+      }
+    },
+    "Needs permission" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precisa de permissão"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

@@ -217,6 +217,27 @@ final class XPCHelperClient: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Window snapping (boringCode)
+
+    /// Quem tem a permissão de Acessibilidade é o helper, então é ele que mexe na janela.
+    func moveWindow(pid: pid_t, windowID: CGWindowID, to frame: CGRect, animate: Bool) async -> Bool {
+        do {
+            let service = ensureRemoteService()
+            return try await service.withContinuation { service, continuation in
+                service.moveWindow(
+                    pid, windowID: windowID,
+                    x: frame.minX, y: frame.minY, width: frame.width, height: frame.height,
+                    animate: animate
+                ) { moved in
+                    continuation.resume(returning: moved)
+                }
+            }
+        } catch {
+            lastError = .transport(underlying: error)
+            return false
+        }
+    }
+
     // MARK: - Keyboard Brightness
 
     func currentKeyboardBrightness() async -> Float? {
