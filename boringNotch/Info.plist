@@ -7,7 +7,7 @@
 	<key>SUBundleName</key>
 	<string>boringCode</string>
 	<key>SUEnableAutomaticChecks</key>
-	<false/>
+	<true/>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>O boringCode usa automação para focar a aba do Terminal ou iTerm onde o seu agente de IA está rodando.</string>
 	<key>NSLocalNetworkUsageDescription</key>
@@ -28,7 +28,7 @@
 	<key>SUFeedURL</key>
 	<string>https://reesoousa.github.io/boringCode/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>B1Y47t8C/v8ImurYA+9arEsuCrpxwJSviekiflMElbI=</string>
+	<string>Cco70s3G1psDNlK5G8oOoMvMYt68ioywKc5H1oVEkqQ=</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict/>

@@ -14,7 +14,7 @@ recursos do [Open Island](https://github.com/Octane0411/open-vibe-island): monit
 - Swift 5/6 + SwiftUI + AppKit, projeto Xcode (`boringNotch.xcodeproj`), macOS 14+.
 - App **sem sandbox** (ver "Módulo de agentes") + helper XPC (`BoringNotchXPCHelper/`)
   para trabalho privilegiado (Accessibility, brilho, notificações).
-- Versão atual: **0.4.0 "Window Cat"** (`MARKETING_VERSION` no projeto; apelido em
+- Versão atual: **0.5.0 "Concierge Cat"** (`MARKETING_VERSION` no projeto; apelido em
   `BoringCodeRelease.name`, `AboutView.swift`).
 - SPM: Defaults (settings), Sparkle (updates), SkyLightWindow, Lottie, Pow, KeyboardShortcuts,
   LaunchAtLogin, swiftui-introspect, swift-collections, AsyncXPCConnection, MacroVisionKit.
@@ -123,11 +123,20 @@ fora (`scripts/lib/sign-app.sh`) com a identidade "Apple Development" do chaveir
   (`gh release create v<versão> dist/boringCode-<versão>.dmg --repo reesoousa/boringCode`),
   com o SHA-256 nas notas. v0.1.0 saiu como pré-release (teste com amigos).
 
+**Atualizações automáticas (Sparkle, desde a 0.5.0):**
+- Feed `https://reesoousa.github.io/boringCode/appcast.xml` (GitHub Pages, branch `gh-pages`), em
+  `SUFeedURL` **e** em `UpdateChannel.feedURLString` (o delegate do Sparkle usa este; até a 0.4.0 ele apontava
+  para o appcast do Boring Notch — nunca voltar a isso, trocaria o app pelo original).
+- Chave EdDSA própria no chaveiro de login, conta `boringcode` (`generate_keys --account boringcode`); a pública
+  está em `SUPublicEDKey`. **Sem a chave privada não dá para publicar atualizações**: backup com
+  `generate_keys --account boringcode -x <arquivo>` (guardar fora do repo).
+- Lançar versão: subir `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` (build sempre maior) → `make-dmg.sh` →
+  PR → merge → `gh release create` com o DMG → `scripts/publish-appcast.sh` (assina, gera o appcast com as notas
+  de `dist/release-notes-v<versão>.md` e publica no `gh-pages`). Appcast só com a versão mais nova.
+
 Próximos passos:
 1. Opcional: fundo próprio do DMG (660×400, `Configuration/dmg/.background/background.tiff`).
-2. Updates: Sparkle aponta para `https://reesoousa.github.io/boringCode/appcast.xml` (não existe;
-   busca automática desligada em `SUEnableAutomaticChecks`). Gerar chave EdDSA própria + Pages.
-3. Se a empresa tiver Developer ID: trocar a identidade e adicionar notarização
+2. Se a empresa tiver Developer ID: trocar a identidade e adicionar notarização
    (`xcrun notarytool` + `stapler`) no `make-dmg.sh`.
 
 ## Módulo de agentes (`boringNotch/agents/`)

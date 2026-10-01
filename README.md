@@ -21,7 +21,7 @@
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-suportado-D97757">
   <img alt="Codex" src="https://img.shields.io/badge/Codex-suportado-4AA3DF">
   <img alt="LocalSend" src="https://img.shields.io/badge/LocalSend-integrado-2DAE9A">
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.4.0%20Window%20Cat-8A8A8E">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.5.0%20Concierge%20Cat-8A8A8E">
   <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-2F7D32"></a>
 </p>
 
@@ -110,7 +110,8 @@ as janelas.
 
 **Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
 [guia de instalação](docs/instalar.md). O app é assinado, mas não notarizado: na primeira abertura o macOS pede
-para liberar em **Ajustes › Privacidade e Segurança › Abrir mesmo assim**.
+para liberar em **Ajustes › Privacidade e Segurança › Abrir mesmo assim**. Depois disso, as boas-vindas pedem cada
+permissão conforme você liga os recursos, e as versões novas **chegam sozinhas** (Sparkle).
 
 **Compilando:** macOS 14+, Xcode 16+.
 
@@ -153,7 +154,8 @@ permite focar a aba certa.
 - [x] Ícone próprio
 - [x] Monitor do sistema (CPU, memória, armazenamento, bateria, rede)
 - [x] Encaixe de janelas arrastando até o notch
-- [ ] Atualizações automáticas (Sparkle com appcast próprio)
+- [x] Atualizações automáticas (Sparkle com appcast próprio)
+- [x] Boas-vindas que pedem cada permissão na hora
 - [ ] Notarização (Developer ID)
 
 ## Créditos e licença
