@@ -60,6 +60,8 @@ final class BNLunarBrightnessEvent: NSObject, NSSecureCoding {
     func startNotificationWatching(with reply: @escaping (Bool) -> Void)
     func stopNotificationWatching()
     func setNotificationFilter(_ bundleIDs: [String], allApps: Bool)
+    /// boringCode: encaixe de janelas. Moldura em coordenadas AX (origem em cima à esquerda da tela principal).
+    func moveWindow(_ pid: Int32, windowID: UInt32, x: Double, y: Double, width: Double, height: Double, animate: Bool, with reply: @escaping (Bool) -> Void)
 }
 
 @objc protocol BoringNotchXPCHelperDelegate {

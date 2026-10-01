@@ -327,6 +327,7 @@
 		BC0A6E0100000000000000A1 /* agents */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = agents; sourceTree = "<group>"; };
 		BC0A6E0100000000000000B2 /* localsend */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = localsend; sourceTree = "<group>"; };
 		BC0A6E0100000000000000C3 /* monitor */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = monitor; sourceTree = "<group>"; };
+		BC0A6E0100000000000000D4 /* windowsnap */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = windowsnap; sourceTree = "<group>"; };
 		11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11F7485C2EC9AABA00F841DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = BoringNotchXPCHelper; sourceTree = "<group>"; };
 		8137A8BA990F4D9CBA56CC7A /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
 		A5167213301F85B40018095A /* boringNotchTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = boringNotchTests; sourceTree = "<group>"; };
@@ -648,6 +649,7 @@
 				BC0A6E0100000000000000A1 /* agents */,
 				BC0A6E0100000000000000B2 /* localsend */,
 				BC0A6E0100000000000000C3 /* monitor */,
+				BC0A6E0100000000000000D4 /* windowsnap */,
 				11DAAB583061BE3000E15887 /* extensions */,
 				1471639B2C5D362F0068B555 /* components */,
 				14CEF4152C5CAED300855D72 /* boringNotchApp.swift */,
@@ -836,6 +838,7 @@
 				BC0A6E0100000000000000A1 /* agents */,
 				BC0A6E0100000000000000B2 /* localsend */,
 				BC0A6E0100000000000000C3 /* monitor */,
+				BC0A6E0100000000000000D4 /* windowsnap */,
 				11DAAB583061BE3000E15887 /* extensions */,
 				8137A8BA990F4D9CBA56CC7A /* Shared */,
 			);

@@ -18,6 +18,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case shelf
     case agents
     case monitor
+    case windowSnap
     case mirror
     case battery
     case osd
@@ -42,6 +43,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .shelf: "Shelf"
         case .agents: "AI Agents"
         case .monitor: "System Monitor"
+        case .windowSnap: "Window Snapping"
         case .mirror: "Mirror"
         case .battery: "Battery"
         case .osd: "OSD"
@@ -61,6 +63,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .shelf: .system("tray.and.arrow.down")
         case .agents: .system("apple.terminal")
         case .monitor: .system("gauge.with.dots.needle.33percent")
+        case .windowSnap: .system("rectangle.split.2x1")
         case .mirror: .system("video")
         case .battery: .system("battery.100.bolt")
         case .osd: .system("dial.medium.fill")
@@ -119,6 +122,8 @@ struct SettingsView: View {
                     AgentsSettingsView()
                 case .monitor:
                     SystemMonitorSettingsView()
+                case .windowSnap:
+                    WindowSnapSettingsView()
                 case .mirror:
                     WebcamSettingsView(camera: camera)
                 case .shortcuts:

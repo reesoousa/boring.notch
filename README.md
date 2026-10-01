@@ -97,6 +97,15 @@ valor atual. As leituras vêm direto do sistema e **só acontecem
 com o monitor aberto**: fechado, não gasta nada. Ajustes › Monitor do sistema: quais métricas mostrar e o intervalo de
 atualização (1, 2 ou 5 s).
 
+## Encaixe de janelas
+
+Arraste uma janela pela barra de título até o notch: ele abre com seis layouts — **Metades, Terços, Foco, Quartos,
+Centro e Preencher**. Passe por cima de uma zona e uma prévia translúcida mostra onde a janela vai ficar; solte e ela
+desliza até o lugar (vai direto com Reduzir movimento). Para continuar arrastando normalmente, é só se afastar do
+notch. Precisa da permissão de **Acessibilidade** (no macOS 27, "Controle do Dispositivo e Acesso a Dados") — o notch
+avisa e pede na primeira vez. Ajustes › Encaixe de janelas: quais layouts mostrar, deslizar ou não, e margens entre
+as janelas.
+
 ## Instalação
 
 **Pelo instalador:** baixe o `.dmg` em [Releases](https://github.com/reesoousa/boringCode/releases) e siga o
@@ -143,6 +152,7 @@ permite focar a aba certa.
 - [x] Instalador `.dmg` assinado (Apple ID pessoal, sem notarização)
 - [x] Ícone próprio
 - [x] Monitor do sistema (CPU, memória, armazenamento, bateria, rede)
+- [x] Encaixe de janelas arrastando até o notch
 - [ ] Atualizações automáticas (Sparkle com appcast próprio)
 - [ ] Notarização (Developer ID)
 
@@ -154,5 +164,7 @@ permite focar a aba certa.
   (ponte por hooks, fluxo de aprovação, foco no terminal, layout do notch fechado).
 - [LocalSend](https://github.com/localsend/localsend) — o [protocolo](https://github.com/localsend/protocol) que o
   boringCode fala para trocar arquivos com o app deles (implementação própria, sem código do LocalSend).
+- [Sapphire](https://github.com/cshariq/Sapphire) — a ideia das "Snap Zones" no notch (implementação própria, sem
+  código do Sapphire).
 
 Distribuído sob a [GPL-3.0](LICENSE), a mesma licença dos dois projetos.
