@@ -1,0 +1,16 @@
+# boringCode
+
+> App de barra de menus para macOS 14+ (fork do Boring Notch) que transforma o notch do MacBook num painel:
+> música, calendário, shelf de arquivos, agentes de IA (Claude Code e Codex), encaixe de janelas e LocalSend.
+> Instalação sem compilar: `curl -fsSL https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/scripts/install.sh | bash`.
+
+## Instalar
+
+- [Guia de instalação para agentes de IA](https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/docs/instalar-com-ia.md): passo a passo, como conferir, o que explicar para a pessoa e como desinstalar
+- [Script de instalação](https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/scripts/install.sh): baixa e confere o DMG da última Release; tem `--uninstall`
+- [Guia para pessoas](https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/docs/instalar.md): DMG, permissões e atualizações
+
+## Desenvolver
+
+- [CLAUDE.md](https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/CLAUDE.md): arquitetura, como compilar, regras do projeto
+- [README](https://raw.githubusercontent.com/reesoousa/boringCode/HEAD/README.md)
