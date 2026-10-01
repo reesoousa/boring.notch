@@ -126,9 +126,10 @@ git -C "$PAGES" commit -q -m "chore: appcast da versão $VERSION" || echo "  (ap
 git -C "$PAGES" push -q origin gh-pages
 git worktree remove --force "$PAGES"
 
-# Liga o GitHub Pages no gh-pages na primeira vez.
+# Liga o GitHub Pages no gh-pages na primeira vez (o GitHub às vezes liga sozinho ao receber o
+# branch: aí o POST responde 409 e está tudo certo).
 if ! gh api "repos/$REPO/pages" >/dev/null 2>&1; then
-  gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null
+  gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null 2>&1 || true
   echo "  GitHub Pages ligado (o primeiro deploy leva 1–2 min)."
 fi
 echo "✓ https://reesoousa.github.io/boringCode/appcast.xml"
