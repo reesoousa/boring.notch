@@ -171,11 +171,12 @@ final class NotchWindowManager {
         }
 
         let screenFrame = screen.frame
-        window.setFrameOrigin(
-            NSPoint(
-                x: screenFrame.origin.x + (screenFrame.width / 2) - window.frame.width / 2,
-                y: screenFrame.origin.y + screenFrame.height - window.frame.height
-            ))
+        let origin = NSPoint(
+            x: screenFrame.origin.x + (screenFrame.width / 2) - window.frame.width / 2,
+            y: screenFrame.origin.y + screenFrame.height - window.frame.height
+        )
+        (window as? BoringNotchSkyLightWindow)?.pinnedOrigin = origin
+        window.setFrameOrigin(origin)
         window.alphaValue = 1
     }
 
