@@ -595,8 +595,10 @@ final class MusicManager: ObservableObject {
         // republish when an extrapolation input actually changed — otherwise
         // every no-op stream event invalidates the whole view tree. A pause/
         // resume must rebase it too, or the estimate overshoots by the pause
-        // duration.
-        if timeChanged || playbackRateChanged || playingStateChanged {
+        // duration. A track change must rebase as well: the next track usually
+        // reports the same elapsedTime (0), and keeping the old timestamp
+        // extrapolates the previous track's whole runtime (full bar).
+        if timeChanged || playbackRateChanged || playingStateChanged || hasContentChange || durationChanged {
             self.timestampDate = state.lastUpdated
         }
     }
