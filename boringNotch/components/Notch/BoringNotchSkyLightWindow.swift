@@ -33,6 +33,11 @@ extension SkyLightOperator {
 
 class BoringNotchSkyLightWindow: NSPanel {
     private var isSkyLightEnabled: Bool = false
+    /// Onde o NotchWindowManager colocou o notch. Gerenciadores de janela (Rectangle,
+    /// AeroSpace…) e o Stage Manager movem a janela pela Acessibilidade (`isMovable`
+    /// só bloqueia o mouse) e ela ficava no meio da tela até reiniciar: qualquer
+    /// movimento que não seja o nosso é desfeito.
+    var pinnedOrigin: NSPoint?
 
     override init(
         contentRect: NSRect,
@@ -88,6 +93,13 @@ class BoringNotchSkyLightWindow: NSPanel {
         NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification, object: self)
             .sink { [weak self] _ in
                 self?.updateCollectionBehavior()
+            }
+            .store(in: &observers)
+
+        NotificationCenter.default.publisher(for: NSWindow.didMoveNotification, object: self)
+            .sink { [weak self] _ in
+                guard let self, let pinned = self.pinnedOrigin, self.frame.origin != pinned else { return }
+                self.setFrameOrigin(pinned)
             }
             .store(in: &observers)
 
