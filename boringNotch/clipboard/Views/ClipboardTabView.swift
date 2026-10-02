@@ -200,7 +200,7 @@ struct ClipboardTabView: View {
     @ViewBuilder
     private var content: some View {
         if history.items.isEmpty {
-            emptyState(symbol: "doc.on.clipboard", title: "Copy something and it shows up here")
+            emptyState(symbol: "square.on.square", title: "Copy something and it shows up here")
         } else if filtered.isEmpty {
             emptyState(symbol: "magnifyingglass", title: "Nothing found")
         } else {
@@ -262,7 +262,7 @@ struct ClipboardTabView: View {
 
     private var accessPrompt: some View {
         HStack(spacing: 14) {
-            Image(systemName: "doc.on.clipboard")
+            Image(systemName: "square.on.square")
                 .font(.system(size: 24, weight: .medium))
                 .foregroundStyle(.gray)
                 .frame(width: 34)

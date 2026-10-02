@@ -144,7 +144,7 @@ struct OnboardingView: View {
 
             case .clipboard:
                 FeatureRequestView(
-                    icon: Image(systemName: "doc.on.clipboard"),
+                    icon: Image(systemName: "square.on.square"),
                     title: "Your clipboard history",
                     description: "Find what you copied earlier — text, links, images and files — in the notch, and paste it with a click. Press ⌃⌘V to open it from anywhere.",
                     privacyNote: "Your history stays on this Mac, and items from password managers are never saved. macOS will ask to let boringCode paste from other apps.",

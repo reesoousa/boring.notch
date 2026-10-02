@@ -19,7 +19,7 @@ let tabs = [
     TabModel(label: "Home", icon: "house.fill", view: .home),
     TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
     TabModel(label: "Agents", icon: AgentPromptGlyph.iconName, view: .agents),
-    TabModel(label: "Clipboard", icon: "doc.on.clipboard.fill", view: .clipboard)
+    TabModel(label: "Clipboard", icon: "square.on.square", view: .clipboard)
 ]
 
 struct TabSelectionView: View {
