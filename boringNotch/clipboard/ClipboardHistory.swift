@@ -393,6 +393,23 @@ enum ClipboardStorage {
         try? FileManager.default.removeItem(at: imageURL(named: file))
     }
 
+    // NSCache é seguro entre threads; o Swift só não sabe disso.
+    nonisolated(unsafe) private static let thumbnails = NSCache<NSString, CGImage>()
+
+    /// Imagem reduzida para o cartão (lê só o necessário do arquivo, com a rotação certa).
+    static func thumbnail(at url: URL, maxPixelSize: Int) -> CGImage? {
+        if let cached = thumbnails.object(forKey: url.path as NSString) { return cached }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        thumbnails.setObject(image, forKey: url.path as NSString)
+        return image
+    }
+
     static func pixelSize(of data: Data) -> CGSize? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],

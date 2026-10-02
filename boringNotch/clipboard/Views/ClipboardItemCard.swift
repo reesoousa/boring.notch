@@ -122,9 +122,13 @@ struct ClipboardItemCard: View {
         }
     }
 
+    /// A imagem preenche o espaço da prévia sem mudar o tamanho dela (senão empurrava o
+    /// topo do cartão para fora).
     private var imagePreview: some View {
-        ClipboardThumbnail(url: item.imageFile.map(ClipboardStorage.imageURL(named:)), fallbackSymbol: "photo", fill: true)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        Color.white.opacity(0.04)
+            .overlay {
+                ClipboardThumbnail(url: item.imageFile.map(ClipboardStorage.imageURL(named:)), fallbackSymbol: "photo", fill: true, isImage: true)
+            }
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             .overlay(alignment: .bottomTrailing) {
                 if let size = item.imagePixelSize {
@@ -143,7 +147,7 @@ struct ClipboardItemCard: View {
     private var filePreview: some View {
         let urls = item.fileURLs
         return VStack(spacing: 4) {
-            ClipboardThumbnail(url: urls.first, fallbackSymbol: "doc", fill: false)
+            ClipboardThumbnail(url: urls.first, fallbackSymbol: "doc", fill: false, isImage: false)
                 .frame(width: 38, height: 38)
             Text(verbatim: urls.count > 1
                  ? String(localized: "\(urls.count) files")
@@ -284,12 +288,15 @@ struct ClipboardSourceIcon: View {
     }
 }
 
-/// Miniatura pelo Quick Look (a mesma da Shelf); some e aparece suave quando chega.
+/// Miniatura que aparece suave quando chega. Imagem copiada: reduzida direto do
+/// arquivo (o Quick Look no modo ícone devolvia o ícone do app padrão do PNG, como
+/// "</>" de um editor); arquivo: Quick Look, o mesmo da Shelf.
 struct ClipboardThumbnail: View {
     let url: URL?
     let fallbackSymbol: String
     /// Imagem preenche o cartão (cortando as sobras); arquivo cabe inteiro.
     let fill: Bool
+    let isImage: Bool
 
     @State private var image: CGImage?
 
@@ -316,7 +323,13 @@ struct ClipboardThumbnail: View {
         .animation(.smooth(duration: 0.25), value: image != nil)
         .task(id: url) {
             guard let url else { return }
-            image = await ThumbnailService.shared.thumbnail(for: url, size: CGSize(width: 240, height: 200))
+            if isImage {
+                image = await Task.detached(priority: .userInitiated) {
+                    ClipboardStorage.thumbnail(at: url, maxPixelSize: 360)
+                }.value
+            } else {
+                image = await ThumbnailService.shared.thumbnail(for: url, size: CGSize(width: 240, height: 200))
+            }
         }
     }
 }
