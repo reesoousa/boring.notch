@@ -62,6 +62,8 @@ final class BNLunarBrightnessEvent: NSObject, NSSecureCoding {
     func setNotificationFilter(_ bundleIDs: [String], allApps: Bool)
     /// boringCode: encaixe de janelas. Moldura em coordenadas AX (origem em cima à esquerda da tela principal).
     func moveWindow(_ pid: Int32, windowID: UInt32, x: Double, y: Double, width: Double, height: Double, animate: Bool, with reply: @escaping (Bool) -> Void)
+    /// boringCode: histórico do clipboard. Aperta ⌘V para colar; `pid` > 0 manda direto para esse app.
+    func pasteCommandV(toPID pid: Int32, with reply: @escaping (Bool) -> Void)
 }
 
 @objc protocol BoringNotchXPCHelperDelegate {

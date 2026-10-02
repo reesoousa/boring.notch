@@ -617,7 +617,7 @@ struct ContentView: View {
                     } else if let notification = notificationManager.activeNotification {
                         NotificationExpandedView(notification: notification)
                             .id(notification.id)
-                    } else if Defaults[.compactMode] && coordinator.currentView != .agents {
+                    } else if Defaults[.compactMode] && coordinator.currentView != .agents && coordinator.currentView != .clipboard {
                         // Player only — no tab switching, so currentView is
                         // ignored here rather than offering a shelf the
                         // compact layout has no room (or tab bar) for.
@@ -652,6 +652,10 @@ struct ContentView: View {
                             AgentsTabView()
                         case .monitor:
                             SystemMonitorView()
+                        case .clipboard:
+                            // No modo compacto (só pelo atalho) o notch se ajusta ao conteúdo: tamanho próprio.
+                            ClipboardTabView()
+                                .frame(width: Defaults[.compactMode] ? 600 : nil, height: Defaults[.compactMode] ? 136 : nil)
                         }
                     }
                 }

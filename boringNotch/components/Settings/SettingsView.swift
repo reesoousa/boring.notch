@@ -16,6 +16,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case media
     case calendar
     case shelf
+    case clipboard
     case agents
     case monitor
     case windowSnap
@@ -41,6 +42,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media: "Media"
         case .calendar: "Calendar"
         case .shelf: "Shelf"
+        case .clipboard: "Clipboard"
         case .agents: "AI Agents"
         case .monitor: "System Monitor"
         case .windowSnap: "Window Snapping"
@@ -61,6 +63,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media: .system("play.rectangle")
         case .calendar: .system("calendar")
         case .shelf: .system("tray.and.arrow.down")
+        case .clipboard: .system("square.on.square")
         case .agents: .system("apple.terminal")
         case .monitor: .system("gauge.with.dots.needle.33percent")
         case .windowSnap: .system("rectangle.split.2x1")
@@ -118,6 +121,8 @@ struct SettingsView: View {
                     BatterySettingsView()
                 case .shelf:
                     ShelfSettingsView()
+                case .clipboard:
+                    ClipboardSettingsView()
                 case .agents:
                     AgentsSettingsView()
                 case .monitor:

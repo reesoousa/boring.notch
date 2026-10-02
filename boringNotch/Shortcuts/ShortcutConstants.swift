@@ -11,4 +11,6 @@ import SwiftUI
 extension KeyboardShortcuts.Name {
     static let toggleSneakPeek = Self("toggleSneakPeek", initial: .init(.h, modifiers: [.command, .shift]))
     static let toggleNotchOpen = Self("toggleNotchOpen", initial: .init(.i, modifiers: [.command, .shift]))
+    /// boringCode: abre o notch direto no histórico do clipboard (como o Win+V do Windows).
+    static let openClipboard = Self("openClipboard", initial: .init(.v, modifiers: [.control, .command]))
 }

@@ -24,6 +24,8 @@ enum NotchViews {
     case agents
     /// Monitor do sistema (boringCode) — aberto pelo botão do cabeçalho, não pela barra de abas.
     case monitor
+    /// Histórico do clipboard (boringCode).
+    case clipboard
 }
 
 enum DownloadIndicatorStyle: String, Defaults.Serializable {
