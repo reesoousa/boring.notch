@@ -22,6 +22,7 @@ recursos do [Open Island](https://github.com/Octane0411/open-vibe-island): monit
   1.0**, um "big update". Até lá: nada de subir versão, gerar DMG, publicar Release ou appcast, mesmo com
   features novas mergeadas na `dev` (quem tem a 0.5.0 receberia a atualização sozinho). O trabalho segue em
   branches/PRs normalmente; a 1.0 só sai quando o dono pedir.
+  O que vai acumulando na `dev` fica listado em `docs/1.0.md`: todo PR de correção/feature acrescenta a sua linha.
 - SPM: Defaults (settings), Sparkle (updates), SkyLightWindow, Lottie, Pow, KeyboardShortcuts,
   LaunchAtLogin, swiftui-introspect, swift-collections, AsyncXPCConnection, MacroVisionKit.
 
