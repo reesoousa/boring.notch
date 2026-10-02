@@ -238,6 +238,21 @@ final class XPCHelperClient: NSObject, ObservableObject {
         }
     }
 
+    /// boringCode: histórico do clipboard — o helper aperta ⌘V (precisa da Acessibilidade dele).
+    func pasteCommandV(toPID pid: pid_t) async -> Bool {
+        do {
+            let service = ensureRemoteService()
+            return try await service.withContinuation { service, continuation in
+                service.pasteCommandV(toPID: pid) { pasted in
+                    continuation.resume(returning: pasted)
+                }
+            }
+        } catch {
+            lastError = .transport(underlying: error)
+            return false
+        }
+    }
+
     // MARK: - Keyboard Brightness
 
     func currentKeyboardBrightness() async -> Float? {

@@ -18,7 +18,8 @@ struct TabModel: Identifiable {
 let tabs = [
     TabModel(label: "Home", icon: "house.fill", view: .home),
     TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
-    TabModel(label: "Agents", icon: AgentPromptGlyph.iconName, view: .agents)
+    TabModel(label: "Agents", icon: AgentPromptGlyph.iconName, view: .agents),
+    TabModel(label: "Clipboard", icon: "doc.on.clipboard.fill", view: .clipboard)
 ]
 
 struct TabSelectionView: View {
@@ -26,6 +27,7 @@ struct TabSelectionView: View {
     @Namespace var animation
     @Default(.boringShelf) private var boringShelf
     @Default(.agentsEnabled) private var agentsEnabled
+    @Default(.clipboardEnabled) private var clipboardEnabled
 
     /// Só as abas dos recursos ligados.
     private var visibleTabs: [TabModel] {
@@ -35,6 +37,7 @@ struct TabSelectionView: View {
             case .shelf: boringShelf
             case .agents: agentsEnabled
             case .monitor: false  // tem botão próprio no cabeçalho
+            case .clipboard: clipboardEnabled
             }
         }
     }

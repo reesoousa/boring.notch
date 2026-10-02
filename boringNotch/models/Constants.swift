@@ -519,6 +519,13 @@ extension Defaults.Keys {
     /// Segundos entre leituras (só enquanto a aba está aberta).
     static let monitorInterval = Key<Double>("monitorInterval", default: 1)
 
+    // MARK: Clipboard history (boringCode)
+    static let clipboardEnabled = Key<Bool>("clipboardEnabled", default: true)
+    /// Quantos itens o histórico guarda (os mais antigos saem).
+    static let clipboardHistoryLimit = Key<Int>("clipboardHistoryLimit", default: 100)
+    /// Escolher um item cola direto no app da frente (precisa de Acessibilidade); desligado, só copia.
+    static let clipboardPasteOnSelect = Key<Bool>("clipboardPasteOnSelect", default: true)
+
     // MARK: Window snapping (boringCode)
     static let windowSnapEnabled = Key<Bool>("windowSnapEnabled", default: true)
     /// A janela desliza até o lugar (desligado com Reduzir movimento).

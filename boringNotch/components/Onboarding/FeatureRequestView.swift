@@ -171,12 +171,13 @@ extension FeatureRequestView where Options == EmptyView {
         total: Int,
         status: Binding<Status>,
         onPrimary: @escaping () -> Void,
-        onSkip: @escaping () -> Void
+        onSkip: @escaping () -> Void,
+        onOpenSettings: (() -> Void)? = nil
     ) {
         self.init(
             icon: icon, title: title, description: description, privacyNote: privacyNote,
             primaryTitle: primaryTitle, step: step, total: total, status: status,
-            onPrimary: onPrimary, onSkip: onSkip, onOpenSettings: nil, options: { EmptyView() }
+            onPrimary: onPrimary, onSkip: onSkip, onOpenSettings: onOpenSettings, options: { EmptyView() }
         )
     }
 }

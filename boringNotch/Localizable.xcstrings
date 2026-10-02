@@ -32912,6 +32912,506 @@
           }
         }
       }
+    },
+    "Clipboard" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        }
+      }
+    },
+    "All" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto"
+          }
+        }
+      }
+    },
+    "Links" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links"
+          }
+        }
+      }
+    },
+    "Images" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivos"
+          }
+        }
+      }
+    },
+    "Clear All" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar tudo"
+          }
+        }
+      }
+    },
+    "Clear history" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar histórico"
+          }
+        }
+      }
+    },
+    "Copy something and it shows up here" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copie algo e ele aparece aqui"
+          }
+        }
+      }
+    },
+    "Nothing found" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada encontrado"
+          }
+        }
+      }
+    },
+    "See everything you copy" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veja tudo o que você copia"
+          }
+        }
+      }
+    },
+    "macOS will ask if boringCode can paste from other apps. Your history stays on this Mac." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O macOS vai perguntar se o boringCode pode colar de outros apps. O histórico fica só neste Mac."
+          }
+        }
+      }
+    },
+    "Turn on boringCode in Privacy & Security › Paste from Other Apps." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative o boringCode em Privacidade e Segurança › Colar de Outros Apps."
+          }
+        }
+      }
+    },
+    "Go to Settings" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        }
+      }
+    },
+    "Pastes into the app you were using" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola no app em que você estava"
+          }
+        }
+      }
+    },
+    "%lld files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld arquivos"
+          }
+        }
+      }
+    },
+    "Copied" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiado"
+          }
+        }
+      }
+    },
+    "Paste" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colar"
+          }
+        }
+      }
+    },
+    "Open Link" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir link"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar"
+          }
+        }
+      }
+    },
+    "Image" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagem"
+          }
+        }
+      }
+    },
+    "now" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "agora"
+          }
+        }
+      }
+    },
+    "%lld min" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        }
+      }
+    },
+    "%lld h" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld h"
+          }
+        }
+      }
+    },
+    "%lld d" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld d"
+          }
+        }
+      }
+    },
+    "Keep a clipboard history" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar um histórico do clipboard"
+          }
+        }
+      }
+    },
+    "Adds a Clipboard tab to the open notch with what you copied recently: text, links, images and files." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adiciona a aba Clipboard ao notch aberto com o que você copiou por último: textos, links, imagens e arquivos."
+          }
+        }
+      }
+    },
+    "Permission" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permissão"
+          }
+        }
+      }
+    },
+    "macOS asks before an app reads what you copy in other apps. Turn on boringCode in Privacy & Security › Paste from Other Apps so it doesn't ask on every copy." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O macOS pergunta antes de um app ler o que você copia em outros apps. Ative o boringCode em Privacidade e Segurança › Colar de Outros Apps para ele não perguntar a cada cópia."
+          }
+        }
+      }
+    },
+    "Keep the last" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar os últimos"
+          }
+        }
+      }
+    },
+    "25 items" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "25 itens"
+          }
+        }
+      }
+    },
+    "50 items" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "50 itens"
+          }
+        }
+      }
+    },
+    "100 items" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "100 itens"
+          }
+        }
+      }
+    },
+    "200 items" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "200 itens"
+          }
+        }
+      }
+    },
+    "Paste when choosing an item" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colar ao escolher um item"
+          }
+        }
+      }
+    },
+    "Open clipboard:" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir clipboard:"
+          }
+        }
+      }
+    },
+    "History" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Histórico"
+          }
+        }
+      }
+    },
+    "Pasting uses the Accessibility permission. Without it, choosing an item only copies it. Items from password managers are never saved, and the history stays on this Mac." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colar usa a permissão de Acessibilidade. Sem ela, escolher um item só o copia. Itens de gerenciadores de senha nunca são guardados, e o histórico fica só neste Mac."
+          }
+        }
+      }
+    },
+    "Clear History…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar histórico…"
+          }
+        }
+      }
+    },
+    "Clear the clipboard history?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar o histórico do clipboard?"
+          }
+        }
+      }
+    },
+    "Clear History" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar histórico"
+          }
+        }
+      }
+    },
+    "This removes the %lld saved items. What is on the clipboard now stays." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isso apaga os %lld itens guardados. O que está no clipboard agora continua."
+          }
+        }
+      }
+    },
+    "boringCode can read the clipboard" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O boringCode pode ler o clipboard"
+          }
+        }
+      }
+    },
+    "boringCode hasn't asked for access yet" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O boringCode ainda não pediu acesso"
+          }
+        }
+      }
+    },
+    "Turn on boringCode in Paste from Other Apps" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative o boringCode em Colar de Outros Apps"
+          }
+        }
+      }
+    },
+    "Your clipboard history" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seu histórico do clipboard"
+          }
+        }
+      }
+    },
+    "Find what you copied earlier — text, links, images and files — in the notch, and paste it with a click. Press ⌃⌘V to open it from anywhere." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontre no notch o que você copiou antes (textos, links, imagens e arquivos) e cole com um clique. Aperte ⌃⌘V para abrir de qualquer lugar."
+          }
+        }
+      }
+    },
+    "Your history stays on this Mac, and items from password managers are never saved. macOS will ask to let boringCode paste from other apps." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O histórico fica só neste Mac, e itens de gerenciadores de senha nunca são guardados. O macOS vai pedir para o boringCode colar de outros apps."
+          }
+        }
+      }
+    },
+    "Use Clipboard" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar Clipboard"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

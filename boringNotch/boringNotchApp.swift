@@ -198,6 +198,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 startAgentAndNetworkServices()
             }
             WindowDragMonitor.shared.start()
+            // Só olha o número de mudanças até ter "Sempre permitir": não mostra aviso nenhum sozinho.
+            ClipboardHistory.shared.start()
         }
 
         NotificationCenter.default.addObserver(
@@ -334,6 +336,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         viewModel.close()
                     }
                 }
+            }
+        }
+
+        // boringCode: ⌃⌘V abre o notch direto no clipboard (de novo, fecha), como o Win+V.
+        KeyboardShortcuts.onKeyDown(for: .openClipboard) { [weak self] in
+            guard let self, Defaults[.clipboardEnabled] else { return }
+            let mouseLocation = NSEvent.mouseLocation
+            var viewModel = self.vm
+            if Defaults[.showOnAllDisplays],
+               let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }),
+               let uuid = screen.displayUUID, let screenViewModel = self.viewModels[uuid] {
+                viewModel = screenViewModel
+            }
+            self.closeNotchTask?.cancel()
+            self.closeNotchTask = nil
+
+            if viewModel.notchState == .open && self.coordinator.currentView == .clipboard {
+                viewModel.close()
+                return
+            }
+            withAnimation(.smooth) { self.coordinator.currentView = .clipboard }
+            if viewModel.notchState == .closed {
+                _ = viewModel.open()
             }
         }
 

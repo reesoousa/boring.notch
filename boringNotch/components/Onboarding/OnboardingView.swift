@@ -16,6 +16,7 @@ enum OnboardingStep: Hashable {
     case agents
     case windowControl
     case localSend
+    case clipboard
     case cameraPermission
     case calendarPermission
     case audioCapturePermission
@@ -44,7 +45,7 @@ struct OnboardingView: View {
 
     /// Telas de recurso, na ordem (a de áudio só existe a partir do macOS 14.2).
     private var featureSteps: [OnboardingStep] {
-        var steps: [OnboardingStep] = [.agents, .windowControl, .localSend, .cameraPermission, .calendarPermission]
+        var steps: [OnboardingStep] = [.agents, .windowControl, .localSend, .clipboard, .cameraPermission, .calendarPermission]
         if #available(macOS 14.2, *) { steps.append(.audioCapturePermission) }
         return steps
     }
@@ -138,6 +139,25 @@ struct OnboardingView: View {
                         Defaults[.localSendEnabled] = false
                         advance()
                     }
+                )
+                .transition(.opacity)
+
+            case .clipboard:
+                FeatureRequestView(
+                    icon: Image(systemName: "doc.on.clipboard"),
+                    title: "Your clipboard history",
+                    description: "Find what you copied earlier — text, links, images and files — in the notch, and paste it with a click. Press ⌃⌘V to open it from anywhere.",
+                    privacyNote: "Your history stays on this Mac, and items from password managers are never saved. macOS will ask to let boringCode paste from other apps.",
+                    primaryTitle: "Use Clipboard",
+                    step: index(of: .clipboard), total: featureSteps.count,
+                    status: $status,
+                    onPrimary: confirmClipboard,
+                    onSkip: {
+                        stopAuthorizationPoll()
+                        Defaults[.clipboardEnabled] = false
+                        advance()
+                    },
+                    onOpenSettings: { ClipboardHistory.shared.openPrivacySettings() }
                 )
                 .transition(.opacity)
 
@@ -302,6 +322,39 @@ struct OnboardingView: View {
                     NSApp.activate(ignoringOtherApps: true)
                     finishStep()
                     return
+                }
+            }
+        }
+    }
+
+    // MARK: - Clipboard
+
+    /// Liga o histórico e pede o acesso ao clipboard. Se não ficar liberado de vez, os
+    /// Ajustes abrem em "Colar de Outros Apps" e a tela espera você ligar lá.
+    private func confirmClipboard() {
+        Defaults[.clipboardEnabled] = true
+        let history = ClipboardHistory.shared
+        status = .working
+        Task { @MainActor in
+            await history.requestAccess()
+            guard history.access != .allowed else {
+                finishStep()
+                return
+            }
+            setOnboardingWindowFloating(false)
+            status = .waitingForSettings
+            authorizationPoll?.cancel()
+            authorizationPoll = Task { @MainActor in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(1))
+                    guard !Task.isCancelled else { return }
+                    history.refreshAccess()
+                    if history.access == .allowed {
+                        setOnboardingWindowFloating(true)
+                        NSApp.activate(ignoringOtherApps: true)
+                        finishStep()
+                        return
+                    }
                 }
             }
         }
